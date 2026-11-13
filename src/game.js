@@ -13,7 +13,7 @@
   let tut = null, armed = null, adPaused = false;
   let dailyTimerId = null, dailyStart = 0;
   let prevGood = [];
-  const fx = { bad: [], glowLines: [], broken: [], hint: null };
+  const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [] };
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -84,16 +84,27 @@
   // ---------- hint text ----------
   function stepText(step) {
     const sk = skin(); const nameOf = (v) => (v === 0 ? sk.an : sk.bn);
+    const place = 'Place ' + nameOf(step.v) + ' here';
     switch (step.kind) {
-      case 'link': return 'Linked tiles must be opposite — this one is ' + nameOf(step.v);
-      case 'pair': return 'Two ' + nameOf(step.p) + ' in a row — the next must be ' + nameOf(1 - step.p);
-      case 'sand': return nameOf(step.p) + ' on both sides — the gap must be ' + nameOf(1 - step.p);
-      case 'count': return 'This line already has enough ' + nameOf(step.p) + ' — the rest must be ' + nameOf(1 - step.p);
-      case 'twin': return 'Two rows or columns would match exactly — avoid the twin';
-      case 'line': return 'Look at the whole line to see what fits';
-      case 'trial': return 'Try this tile and see what follows';
-      default: return 'Here\'s the next tile';
+      case 'link': return place + ' — linked tiles (joined by the dot) are always opposite.';
+      case 'pair': return 'Two ' + nameOf(step.p) + ' in a row already. ' + place + ', or three would match.';
+      case 'sand': return nameOf(step.p) + ' on both sides of the gap. ' + place + ' to fill it in.';
+      case 'count': return 'This line already has enough ' + nameOf(step.p) + '. ' + place + ' to balance it out.';
+      case 'twin': return 'Two rows or columns would end up identical. ' + place + ' so they stay different.';
+      case 'line': return 'Look at the whole line, not just one pair. ' + place + ' — it’s the only piece that fits.';
+      case 'trial': return 'Not obvious yet — ' + place.toLowerCase() + ' and see what it unlocks.';
+      default: return place + '.';
     }
+  }
+  // Which cells show the evidence behind a step, highlighted so the reasoning is visible.
+  function evidenceFor(step) {
+    if (step.from && step.from.length) return step.from.slice();
+    if (step.line != null) {
+      const P = OP.Puzzle.ctx(pz.n, pz.links, pz.unique);
+      if (step.kind === 'count') return P.lc[step.line].filter((ci) => board[ci] === step.p);
+      return P.lc[step.line].filter((ci) => ci !== step.i);
+    }
+    return [];
   }
 
   // ---------- save / resume ----------
@@ -122,7 +133,7 @@
 
   function begin(which, spec) {
     curSpec = spec; tut = null; armed = null; prevGood = [];
-    fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null;
+    fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     const saved = curObj()[which];
     if (saved && saved.spec && saved.spec.seed === spec.seed) {
       pz = saved.pz; board = saved.board.slice(); hist = saved.hist || []; elapsed = saved.elapsed || 0;
@@ -158,25 +169,40 @@
     updateBoosterUI();
     saveCur();
 
-    if (spec.tut === 1) OP.ui.msg('Never three of the same in a row', { ms: 3200 });
-    else if (spec.tut === 2) OP.ui.msg('Balance fire and ice', { ms: 3200 });
-    else if (spec.tut === 3) OP.ui.msg('Frozen tiles can’t change. Fill in the rest!', { ms: 3200 });
-    else if (tut) OP.ui.msg(stepText(tut.target), { ms: 2800 });
+    const intro = {
+      1: 'Rule: never three of the same piece in a row or column.',
+      2: 'Rule: every row and column needs equal fire and ice.',
+      11: 'Rule: tiles joined by a link are always opposite.',
+      31: 'Rule: no two rows or columns can be identical.',
+    }[spec.tut];
+    if (intro && tut) OP.ui.msg(intro, { ms: 2800, after: () => { if (tut) showStep(); } });
+    else if (spec.tut === 3) OP.ui.msg('Frozen tiles (the padlock) can’t change. Fill in the rest!', { ms: 3400 });
     else OP.ui.msg('');
 
     if (which === 'levels') prefetch(C.levelSpec(spec.level + 1));
   }
 
+  function showStep() {
+    if (!tut || !tut.target) return;
+    OP.ui.msg(stepText(tut.target), { ms: 4200 });
+  }
   function computeTarget() {
     tut.target = OP.Puzzle.nextStep(pz, board, tut.prefer);
-    if (tut.target) { const p = cellCenterCSS(tut.target.i); OP.ui.pointer(p.x, p.y); }
-    else OP.ui.pointer(null);
+    if (tut.target) {
+      const p = cellCenterCSS(tut.target.i); OP.ui.pointer(p.x, p.y);
+      fx.evidence = evidenceFor(tut.target);
+    } else {
+      OP.ui.pointer(null); fx.evidence = [];
+    }
+    if (scene) scene.applyFx();
   }
   function endForcedTutorial() {
     tut = null;
     OP.ui.pointer(null);
+    fx.evidence = [];
+    if (scene) scene.applyFx();
     OP.ui.setHud({ bar: true });
-    OP.ui.msg('Your turn! Finish the board.', { ms: 2400 });
+    OP.ui.msg('Your turn! Use what you just learned to finish the board.', { ms: 2800 });
     updateBoosterUI();
     saveCur();
   }
@@ -270,14 +296,18 @@
   function tap(i) {
     if (adPaused || OP.ui.modalOpen() || !pz) return;
     if (tut && tut.forced) {
-      if (!tut.target || i !== tut.target.i) { if (scene) scene.shakeCell(i); return; }
+      if (!tut.target || i !== tut.target.i) {
+        if (scene) scene.shakeCell(i);
+        OP.ui.msg('Not quite — check the highlighted tiles', { tone: 'bad', ms: 1500, after: () => showStep() });
+        return;
+      }
       const v = tut.target.v, kind = tut.target.kind;
       applyPlacement(i, v, board[i]);
       tut.steps++;
       if (isFull(board)) return;
       const doneReq = tut.requireKind && kind === tut.requireKind;
       if (tut.steps >= tut.capSteps || doneReq) endForcedTutorial();
-      else computeTarget();
+      else { computeTarget(); showStep(); }
       return;
     }
     if (armed === 'check') { doCheck(i); return; }
@@ -366,7 +396,7 @@
   function restartCurrent() {
     if (!pz) return;
     board = Array.from(pz.givens); hist = [];
-    prevGood = []; fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null;
+    prevGood = []; fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     armed = null;
     if (curSpec && curSpec.tut) afterLoad(mode, curSpec);
     else { if (scene) { scene.redraw(); scene.applyFx(); } updateBoosterUI(); saveCur(); }
@@ -509,6 +539,11 @@
       const ox = L.x * dpr, oy = L.y * dpr, P = pad * dpr, CS = cs * dpr;
       const rectFor = (i) => { const r = (i / n) | 0, c = i % n; return [ox + P + c * CS + 1, oy + P + r * CS + 1, CS - 2, CS - 2]; };
       this.gFx.clear();
+      (fx.evidence || []).forEach((i) => {
+        const r = rectFor(i);
+        this.gFx.fillStyle(0x3fa4e8, 0.16); this.gFx.fillRoundedRect.apply(this.gFx, r.concat([6 * dpr]));
+        this.gFx.lineStyle(2 * dpr, 0x3fa4e8, 0.6); this.gFx.strokeRoundedRect.apply(this.gFx, r.concat([6 * dpr]));
+      });
       let P2 = null;
       if ((fx.glowLines || []).length) P2 = OP.Puzzle.ctx(n, pz.links, pz.unique);
       (fx.glowLines || []).forEach((L2) => { P2.lc[L2].forEach((i) => { this.gFx.lineStyle(3 * dpr, 0xffd27a, 0.95); this.gFx.strokeRoundedRect.apply(this.gFx, rectFor(i).concat([6 * dpr])); }); });
