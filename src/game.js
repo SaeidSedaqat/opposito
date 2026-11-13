@@ -186,10 +186,6 @@
     fx.bad = cells; if (scene) scene.applyFx();
     setTimeout(() => { fx.bad = S().settings.auto ? Array.from(OP.Puzzle.violations(pz, board).cells) : []; if (scene) scene.applyFx(); }, ms || 1400);
   }
-  function flashHint(i) {
-    fx.hint = i; if (scene) scene.applyFx();
-    setTimeout(() => { fx.hint = null; if (scene) scene.applyFx(); }, 1400);
-  }
 
   function checkWinOrBroken() {
     if (!isFull(board)) return;
@@ -294,33 +290,36 @@
     fx.evidence = cells; if (scene) scene.applyFx();
     setTimeout(() => { fx.evidence = []; if (scene) scene.applyFx(); }, ms || 1600);
   }
+  // Check: reveals the correct piece on the single tapped cell (a frozen or already-correct
+  // tile costs nothing).
   function doCheck(i) {
-    if (pz.givens[i] >= 0) { OP.ui.msg('That one is frozen', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
-    const B = S().boosters;
-    if (B.check <= 0) { armed = null; updateBoosterUI(); OP.ui.boosterAd('check', pz.n >= 8, updateBoosterUI); return; }
-    if (board[i] < 0) {
-      const nm = pz.sol[i] === 0 ? skin().an : skin().bn;
-      OP.ui.msg('This should be ' + nm, { ms: 1800 });
-      flashHint(i);
-    } else {
-      const ok = board[i] === pz.sol[i];
-      OP.ui.msg(ok ? 'Correct!' : 'That’s wrong', { tone: ok ? 'good' : 'bad', ms: 1400 });
-      if (!ok) flashBad([i], 1400); else flashHint(i);
-    }
-    B.check--; OP.save.soon();
-    armed = null; updateBoosterUI();
-  }
-  function doReveal(i) {
     if (pz.givens[i] >= 0) { OP.ui.msg('That one is frozen', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
     if (board[i] === pz.sol[i]) { OP.ui.msg('That tile is already correct', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
     const B = S().boosters;
-    if (B.reveal <= 0) { armed = null; updateBoosterUI(); OP.ui.boosterAd('reveal', false, updateBoosterUI); return; }
+    if (B.check <= 0) { armed = null; updateBoosterUI(); OP.ui.boosterAd('check', pz.n >= 8, updateBoosterUI); return; }
     const before = board[i];
     pushHist(i, before, pz.sol[i]);
     board[i] = pz.sol[i];
-    B.reveal--; OP.save.soon();
+    B.check--; OP.save.soon();
     armed = null; updateBoosterUI();
     OP.audio.play(pz.sol[i] === 0 ? 'fire' : 'ice');
+    afterPlace(); saveCur(); checkWinOrBroken();
+  }
+  // Reveal: fills in the whole row or column through the tapped cell (whichever has more
+  // empties/wrong cells). No charge if that line is already fully correct.
+  function doReveal(i) {
+    const n = pz.n, r = (i / n) | 0, c = i % n, rowL = r, colL = n + c;
+    const P = OP.Puzzle.ctx(n, pz.links, pz.unique);
+    const scoreLine = (L) => { let s = 0; P.lc[L].forEach((ci) => { if (board[ci] < 0) s++; else if (board[ci] !== pz.sol[ci]) s++; }); return s; };
+    const rs = scoreLine(rowL), cs2 = scoreLine(colL);
+    if (rs === 0 && cs2 === 0) { OP.ui.msg('That line is already done', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
+    const B = S().boosters;
+    if (B.reveal <= 0) { armed = null; updateBoosterUI(); OP.ui.boosterAd('reveal', false, updateBoosterUI); return; }
+    const L = rs >= cs2 ? rowL : colL;
+    P.lc[L].forEach((ci) => { if (pz.givens[ci] < 0 && board[ci] !== pz.sol[ci]) { pushHist(ci, board[ci], pz.sol[ci]); board[ci] = pz.sol[ci]; } });
+    B.reveal--; OP.save.soon();
+    armed = null; updateBoosterUI();
+    OP.audio.play('line');
     afterPlace(); saveCur(); checkWinOrBroken();
   }
   function booster(k) {
