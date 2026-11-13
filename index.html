@@ -8,8 +8,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.32') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.32') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.43') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.43') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -269,17 +269,17 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.32';
+  var V = '0.1.43';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
-    ['src/config.js', 3592],
+    ['src/config.js', 3828],
     ['src/save.js', 2102],
     ['src/skins.js', 12438],
-    ['src/audio.js', 2574],
+    ['src/audio.js', 2670],
     ['src/puzzle.js', 17033],
     ['src/ui.js', 32466],
-    ['src/game.js', 23340],
-    ['src/main.js', 1237]
+    ['src/game.js', 23704],
+    ['src/main.js', 3788]
   ];
   var SFX = [
     ['click', 669], ['fire', 1296], ['ice', 1505], ['clear', 669], ['line', 1923],
@@ -333,29 +333,43 @@ img{display:block; max-width:100%;}
 
   window.OP_BIN = {};
 
-  function loadScripts(i) {
-    if (i >= FILES.length) { loadSfx(0); return; }
-    var f = FILES[i];
-    fetchText(f[0], function (e, text) {
-      if (e) { fail(); return; }
-      bump(f[1]);
-      try {
-        var s = document.createElement('script');
-        s.text = text + '\n//# sourceURL=' + location.origin + '/' + f[0];
-        document.body.appendChild(s);
-        document.body.removeChild(s);
-      } catch (ex) { fail(); return; }
-      loadScripts(i + 1);
+  // Fetch every file and every sound at once (no reason to wait on one tiny request before
+  // starting the next) and only run the scripts, in order, once everything has arrived.
+  function loadAll() {
+    var texts = new Array(FILES.length);
+    var remaining = FILES.length + SFX.length;
+    var failed = false;
+    function settle() {
+      remaining--;
+      if (remaining === 0 && !failed) runScripts();
+    }
+    FILES.forEach(function (f, i) {
+      fetchText(f[0], function (e, text) {
+        if (failed) return;
+        if (e) { failed = true; fail(); return; }
+        texts[i] = text;
+        bump(f[1]);
+        settle();
+      });
     });
-  }
-  function loadSfx(i) {
-    if (i >= SFX.length) { finish(); return; }
-    var f = SFX[i];
-    fetchBin('assets/audio/' + f[0] + '.mp3', function (e, buf) {
-      if (!e) window.OP_BIN[f[0]] = buf;
-      bump(f[1]);
-      loadSfx(i + 1);
+    SFX.forEach(function (f) {
+      fetchBin('assets/audio/' + f[0] + '.mp3', function (e, buf) {
+        if (!e) window.OP_BIN[f[0]] = buf;
+        bump(f[1]);
+        settle();
+      });
     });
+    function runScripts() {
+      for (var i = 0; i < FILES.length; i++) {
+        try {
+          var s = document.createElement('script');
+          s.text = texts[i] + '\n//# sourceURL=' + location.origin + '/' + FILES[i][0];
+          document.body.appendChild(s);
+          document.body.removeChild(s);
+        } catch (ex) { fail(); return; }
+      }
+      finish();
+    }
   }
   function finish() {
     try { if (document.fonts) document.fonts.load('800 20px Nunito'); } catch (e) { /* ignore */ }
@@ -366,7 +380,7 @@ img{display:block; max-width:100%;}
     }, 200);
   }
 
-  loadScripts(0);
+  loadAll();
 })();
 </script>
 </body>

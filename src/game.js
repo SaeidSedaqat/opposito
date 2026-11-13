@@ -15,7 +15,7 @@
   let prevGood = [];
   const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [] };
   // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
-  const TUT_HELP = { 1: ['three'], 2: ['balance'], 11: ['links'], 31: ['twins'] };
+  const TUT_HELP = { 1: ['three', 'balance'], 11: ['links'], 31: ['twins'] };
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -372,6 +372,17 @@
     else if (mode === 'daily' && OP.ui.current === 'game') startDailyTimer();
   }
 
+  // ---------- dev/debug (only ever called from the ?dev=1 panel) ----------
+  function devSolve() {
+    if (!pz) return;
+    board = Array.from(pz.sol);
+    hist = [];
+    afterPlace();
+    saveCur();
+    checkWinOrBroken();
+  }
+  function devInfo() { return { mode, level: S().level, n: pz ? pz.n : null, diff: curSpec ? curSpec.diff : null }; }
+
   // ---------- Phaser scene ----------
   class BoardScene extends Phaser.Scene {
     constructor() { super('Board'); }
@@ -516,5 +527,5 @@
     }
   }
 
-  OP.game = { start, pause, booster, onScreen, refreshMarks, clearCache, adPause, layout, Scene: BoardScene };
+  OP.game = { start, pause, booster, onScreen, refreshMarks, clearCache, adPause, layout, Scene: BoardScene, devSolve, devInfo };
 })();

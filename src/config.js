@@ -5,10 +5,13 @@
 
   const DIFFS = ['Easy', 'Medium', 'Hard', 'Expert'];
 
-  // Levels 1-3: 4x4 tutorials (one rule each). 11 and 31: guided rule tutorials.
+  // Levels 1-3: 4x4 tutorials. Level 1 introduces both starting rules at once; 3 adds frozen tiles.
+  // 11 and 31 introduce links and twin-rows the same way.
   function levelSpec(L) {
     let s;
-    if (L <= 3) s = { n: 4, diff: 1, links: false, unique: false, tut: L };
+    if (L === 1) s = { n: 4, diff: 1, links: false, unique: false, tut: 1 };
+    else if (L === 2) s = { n: 4, diff: 1, links: false, unique: false };
+    else if (L === 3) s = { n: 4, diff: 1, links: false, unique: false, tut: 3 };
     else if (L <= 10) s = { n: 6, diff: 1, links: false, unique: false };
     else if (L === 11) s = { n: 6, diff: 1, links: true, unique: false, tut: 11, require: 'link' };
     else if (L <= 15) s = { n: 6, diff: 1, links: true, unique: false };
@@ -63,7 +66,7 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.32',
+    VERSION: '0.1.43',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)

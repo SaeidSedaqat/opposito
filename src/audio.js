@@ -29,6 +29,7 @@
 
   function unlock() {
     if (unlocked) return;
+    if (document.getElementById('loading')) return; // ignore taps on the loading screen itself
     unlocked = true;
     initCtx();
     if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
