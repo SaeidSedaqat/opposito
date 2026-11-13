@@ -28,6 +28,5 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) onResizeSoon(); });
 
   OP.game.layout(sz.w, sz.h);
-  OP.ui.show('home');
-  OP.ui.maybeLogin();
+  OP.ui.show('home'); // this alone triggers OP.game.onScreen('home'), which shows the login reward if due
 })();

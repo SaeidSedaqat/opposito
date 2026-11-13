@@ -8,8 +8,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.21') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.21') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.22') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.22') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -269,7 +269,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.21';
+  var V = '0.1.22';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3592],
@@ -279,7 +279,7 @@ img{display:block; max-width:100%;}
     ['src/puzzle.js', 17033],
     ['src/ui.js', 32010],
     ['src/game.js', 26499],
-    ['src/main.js', 1174]
+    ['src/main.js', 1237]
   ];
   var SFX = [
     ['click', 669], ['fire', 1296], ['ice', 1505], ['clear', 669], ['line', 1923],
@@ -345,7 +345,6 @@ img{display:block; max-width:100%;}
         document.body.appendChild(s);
         document.body.removeChild(s);
       } catch (ex) { fail(); return; }
-      setPct(92 + 4 * (i + 1) / FILES.length);
       loadScripts(i + 1);
     });
   }
