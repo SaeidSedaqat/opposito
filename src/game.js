@@ -10,10 +10,12 @@
   // ---------- module state ----------
   let scene = null, curL = null;
   let mode = null, curSpec = null, pz = null, board = null, hist = [], elapsed = 0;
-  let tut = null, armed = null, adPaused = false;
+  let armed = null, adPaused = false;
   let dailyTimerId = null, dailyStart = 0;
   let prevGood = [];
   const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [] };
+  // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
+  const TUT_HELP = { 1: ['three'], 2: ['balance'], 11: ['links'], 31: ['twins'] };
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -42,14 +44,6 @@
     genPuzzle(spec, (p) => { OP.ui.setHud({ gen: false }); cb(p); });
   }
 
-  // ---------- fixed 4x4 tutorial boards (L1, L2) ----------
-  const TUT_SOL = [0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0];
-  function tutPZ(empties, seed) {
-    const g = TUT_SOL.slice();
-    empties.forEach((i) => { g[i] = -1; });
-    return { n: 4, sol: TUT_SOL.slice(), givens: g, links: [], unique: false, rating: 1, diff: 1, seed };
-  }
-
   // ---------- layout ----------
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function computeLayout(w, h) {
@@ -73,12 +67,6 @@
     curL = computeLayout(w, h);
     OP.ui.placeHud(curL);
     if (scene) scene.setLayout(curL);
-    if (pz && tut && tut.target) { const p = cellCenterCSS(tut.target.i); OP.ui.pointer(p.x, p.y); }
-  }
-  function cellCenterCSS(i) {
-    const L = curL, n = pz.n, pad = L.size * 0.03, cs = (L.size - 2 * pad) / n;
-    const r = (i / n) | 0, c = i % n;
-    return { x: L.x + pad + (c + 0.5) * cs, y: L.y + pad + (r + 0.5) * cs };
   }
 
   // ---------- hint text ----------
@@ -132,7 +120,7 @@
   }
 
   function begin(which, spec) {
-    curSpec = spec; tut = null; armed = null; prevGood = [];
+    curSpec = spec; armed = null; prevGood = [];
     fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     const saved = curObj()[which];
     if (saved && saved.spec && saved.spec.seed === spec.seed) {
@@ -140,28 +128,20 @@
       afterLoad(which, spec);
       return;
     }
-    if (spec.tut === 1) { pz = tutPZ([3, 4, 10, 13], 'tut-1'); board = Array.from(pz.givens); hist = []; elapsed = 0; afterLoad(which, spec); return; }
-    if (spec.tut === 2) { pz = tutPZ([0, 3, 10, 14, 15], 'tut-2'); board = Array.from(pz.givens); hist = []; elapsed = 0; afterLoad(which, spec); return; }
     obtain(spec, (p) => {
       pz = p; board = Array.from(pz.givens); hist = []; elapsed = 0;
       afterLoad(which, spec);
+      if (TUT_HELP[spec.tut]) OP.ui.openHelp(TUT_HELP[spec.tut]);
     });
   }
 
   function afterLoad(which, spec) {
-    if (spec.tut === 1) tut = { forced: true, prefer: 'pair', capSteps: Infinity, requireKind: null, steps: 0 };
-    else if (spec.tut === 2) tut = { forced: true, prefer: 'count', capSteps: Infinity, requireKind: null, steps: 0 };
-    else if (spec.tut === 11) tut = { forced: true, prefer: 'link', capSteps: 12, requireKind: 'link', steps: 0 };
-    else if (spec.tut === 31) tut = { forced: true, prefer: 'twin', capSteps: 12, requireKind: 'twin', steps: 0 };
-    else tut = null;
-    if (tut) computeTarget();
-
     const labels = {
       levels: ['Level ' + spec.level, C.DIFFS[spec.diff - 1] + ' · ' + spec.n + '×' + spec.n],
       free: ['Free Play', C.DIFFS[spec.diff - 1] + ' · ' + spec.n + '×' + spec.n],
       daily: ['Daily', C.dateLabel(C.today())],
     }[which];
-    OP.ui.setHud({ l1: labels[0], l2: labels[1], timer: which === 'daily', bar: !(spec.tut && (spec.tut <= 3 || (tut && tut.forced))), gen: false });
+    OP.ui.setHud({ l1: labels[0], l2: labels[1], timer: which === 'daily', bar: true, gen: false });
     if (which === 'daily') { OP.ui.setTimer(elapsed); startDailyTimer(); } else stopDailyTimer();
 
     prevGood = OP.Puzzle.goodLines(pz, board);
@@ -169,42 +149,10 @@
     updateBoosterUI();
     saveCur();
 
-    const intro = {
-      1: 'Rule: never three of the same piece in a row or column.',
-      2: 'Rule: every row and column needs equal fire and ice.',
-      11: 'Rule: tiles joined by a link are always opposite.',
-      31: 'Rule: no two rows or columns can be identical.',
-    }[spec.tut];
-    if (intro && tut) OP.ui.msg(intro, { ms: 2800, after: () => { if (tut) showStep(); } });
-    else if (spec.tut === 3) OP.ui.msg('Frozen tiles (the padlock) can’t change. Fill in the rest!', { ms: 3400 });
+    if (spec.tut === 3) OP.ui.msg('Frozen tiles (the padlock) can’t change. Fill in the rest!', { ms: 3400 });
     else OP.ui.msg('');
 
     if (which === 'levels') prefetch(C.levelSpec(spec.level + 1));
-  }
-
-  function showStep() {
-    if (!tut || !tut.target) return;
-    OP.ui.msg(stepText(tut.target)); // persists until the next tap replaces it, like a real hint banner
-  }
-  function computeTarget() {
-    tut.target = OP.Puzzle.nextStep(pz, board, tut.prefer);
-    if (tut.target) {
-      const p = cellCenterCSS(tut.target.i); OP.ui.pointer(p.x, p.y);
-      fx.evidence = evidenceFor(tut.target);
-    } else {
-      OP.ui.pointer(null); fx.evidence = [];
-    }
-    if (scene) scene.applyFx();
-  }
-  function endForcedTutorial() {
-    tut = null;
-    OP.ui.pointer(null);
-    fx.evidence = [];
-    if (scene) scene.applyFx();
-    OP.ui.setHud({ bar: true });
-    OP.ui.msg('Your turn! Use what you just learned to finish the board.', { ms: 2800 });
-    updateBoosterUI();
-    saveCur();
   }
 
   // ---------- rendering helpers ----------
@@ -295,23 +243,6 @@
 
   function tap(i) {
     if (adPaused || OP.ui.modalOpen() || !pz) return;
-    if (tut && tut.forced) {
-      if (!tut.target || i !== tut.target.i) {
-        if (scene) scene.shakeCell(i);
-        OP.ui.msg('Not quite — check the highlighted tiles', { tone: 'bad', ms: 1500, after: () => showStep() });
-        return;
-      }
-      const before = board[i], after = before < 0 ? 0 : (before === 0 ? 1 : -1);
-      applyPlacement(i, after, before);
-      if (after !== tut.target.v) return; // same tap-to-cycle as everywhere else; keep tapping this tile
-      const kind = tut.target.kind;
-      tut.steps++;
-      if (isFull(board)) return;
-      const doneReq = tut.requireKind && kind === tut.requireKind;
-      if (tut.steps >= tut.capSteps || doneReq) endForcedTutorial();
-      else { computeTarget(); showStep(); }
-      return;
-    }
     if (armed === 'check') { doCheck(i); return; }
     if (armed === 'reveal') { doReveal(i); return; }
     if (pz.givens[i] >= 0) { if (scene) scene.shakeCell(i); return; }
@@ -342,9 +273,14 @@
     const step = OP.Puzzle.nextStep(pz, board);
     if (!step) return;
     B.hint--; OP.save.soon(); OP.audio.play('hint');
+    flashEvidence(evidenceFor(step), 2200);
     applyPlacement(step.i, step.v, board[step.i]);
     OP.ui.msg(stepText(step), { ms: 2600 });
     updateBoosterUI();
+  }
+  function flashEvidence(cells, ms) {
+    fx.evidence = cells; if (scene) scene.applyFx();
+    setTimeout(() => { fx.evidence = []; if (scene) scene.applyFx(); }, ms || 1600);
   }
   function doCheck(i) {
     if (pz.givens[i] >= 0) { OP.ui.msg('That one is frozen', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
@@ -400,8 +336,8 @@
     board = Array.from(pz.givens); hist = [];
     prevGood = []; fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     armed = null;
-    if (curSpec && curSpec.tut) afterLoad(mode, curSpec);
-    else { if (scene) { scene.redraw(); scene.applyFx(); } updateBoosterUI(); saveCur(); }
+    if (scene) { scene.redraw(); scene.applyFx(); }
+    updateBoosterUI(); saveCur();
     if (mode === 'daily') startDailyTimer();
   }
   function pause() {
@@ -415,7 +351,7 @@
   }
   function onScreen(name) {
     if (name === 'home') OP.ui.maybeLogin();
-    if (name !== 'game') { if (mode === 'daily') stopDailyTimer(); OP.ui.pointer(null); }
+    if (name !== 'game' && mode === 'daily') stopDailyTimer();
     if (scene && scene.sys && scene.sys.game && scene.sys.game.canvas) {
       scene.sys.game.canvas.style.display = name === 'game' ? '' : 'none';
     }
@@ -426,7 +362,7 @@
     if (scene) scene.applyFx();
   }
   function clearCache() {
-    mode = null; curSpec = null; pz = null; board = null; hist = []; tut = null; armed = null;
+    mode = null; curSpec = null; pz = null; board = null; hist = []; armed = null;
     stopDailyTimer();
     if (scene) { scene.redraw(); scene.applyFx(); }
   }

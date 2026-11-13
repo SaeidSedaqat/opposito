@@ -327,7 +327,7 @@
       toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + toggleRow('auto', 'Auto-highlight mistakes') + '</div>' +
       '<button class="btn warn" id="mReset">Reset progress</button>' +
       '<button class="btn primary" data-x="close">Done</button>' +
-      '<div class="credit">Created by SaeidGD<small>v' + C.VERSION + '</small></div></div>');
+      '<div class="credit">Created by SaeidGD</div></div>');
     bindToggles(m);
     m.querySelector('#mReset').onclick = () => confirmBox('Reset progress?', 'Coins, levels, skins, boosters and streaks will be erased. This cannot be undone.', 'Reset', () => {
       OP.save.reset();
@@ -380,18 +380,26 @@
   function helpSection(title, text, examplesHtml) {
     return '<div class="help-rule"><h3>' + esc(title) + '</h3><p>' + esc(text) + '</p><div class="ex-group">' + examplesHtml + '</div></div>';
   }
-  function openHelp() {
+  function helpSections() {
     const sk = OP.skins.get(S().skin);
-    const body =
-      helpSection('Balance', 'Every row and column needs an equal number of ' + sk.an + ' and ' + sk.bn + '.',
-        exGrid([[0, 0, 1, 1]], true) + exGrid([[0, 0, 0, 1]], false)) +
-      helpSection('No three in a row', 'Two of the same piece side by side is fine — three in a row is not.',
-        exPair([0, 0, 1], true) + exPair([0, 0, 0], false)) +
-      helpSection('Melt links', 'Tiles joined by the little dot must always be opposite.',
-        exLink(true) + exLink(false)) +
-      helpSection('No twin rows', 'In some puzzles, no two rows or columns can match each other exactly.',
-        exGrid([[0, 1, 1, 0], [1, 0, 0, 1]], true) + exGrid([[0, 1, 1, 0], [0, 1, 1, 0]], false));
-    modal('<div class="panel help"><h2>How to Play</h2><p class="sub">Fill every tile so all the rules below hold at once.</p>' +
+    return {
+      balance: () => helpSection('Balance', 'Every row and column needs an equal number of ' + sk.an + ' and ' + sk.bn + '.',
+        exGrid([[0, 0, 1, 1]], true) + exGrid([[0, 0, 0, 1]], false)),
+      three: () => helpSection('No three in a row', 'Two of the same piece side by side is fine — three in a row is not.',
+        exPair([0, 0, 1], true) + exPair([0, 0, 0], false)),
+      links: () => helpSection('Melt links', 'Tiles joined by the little dot must always be opposite.',
+        exLink(true) + exLink(false)),
+      twins: () => helpSection('No twin rows', 'In some puzzles, no two rows or columns can match each other exactly.',
+        exGrid([[0, 1, 1, 0], [1, 0, 0, 1]], true) + exGrid([[0, 1, 1, 0], [0, 1, 1, 0]], false)),
+    };
+  }
+  // only: optional array of section keys ('balance'|'three'|'links'|'twins') to show just the new rule for a level.
+  function openHelp(only) {
+    const sections = helpSections();
+    const keys = only && only.length ? only : ['balance', 'three', 'links', 'twins'];
+    const body = keys.map((k) => sections[k] ? sections[k]() : '').join('');
+    const sub = only && only.length ? 'New rule for this level:' : 'Fill every tile so all the rules below hold at once.';
+    modal('<div class="panel help"><h2>How to Play</h2><p class="sub">' + sub + '</p>' +
       body + '<button class="btn primary" data-x="close">Got it</button></div>');
   }
 
