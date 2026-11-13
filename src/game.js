@@ -198,7 +198,7 @@
     }
     else {
       fx.broken = Array.from(v.cells);
-      if (scene) { scene.applyFx(); scene.shakeBoard(); }
+      if (scene) scene.applyFx();
       OP.ui.msg('Not quite right yet', { tone: 'bad', ms: 1600 });
     }
   }
@@ -535,7 +535,6 @@
       this.tweens.add({ targets: cont, x: [x0 - 6 * this.dpr, x0 + 6 * this.dpr, x0 - 4 * this.dpr, x0 + 4 * this.dpr, x0], duration: 260, ease: 'Sine.easeInOut' });
       OP.audio.play('wrong', 0.5);
     }
-    shakeBoard() { try { this.cameras.main.shake(260, 0.004); } catch (e) { /* ignore */ } }
     winRipple() {
       try {
         const L = this.L; if (!L) return;
@@ -546,6 +545,20 @@
           onUpdate: () => { try { ring.setStrokeStyle(4 * this.dpr, 0xffd27a, 1 - ring.radius / (L.size * 0.75 * dpr)); } catch (e2) { /* ignore */ } },
           onComplete: () => ring.destroy(),
         });
+        // A small burst of fire/ice/gold particles, bursting outward and drifting up as they fade.
+        const colors = [0xff6a45, 0x3fa4e8, 0xffd27a];
+        const count = 26;
+        for (let k = 0; k < count; k++) {
+          const ang = (k / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
+          const dist = (L.size * 0.3 + Math.random() * L.size * 0.3) * dpr;
+          const size = (2.5 + Math.random() * 3) * dpr;
+          const p = this.add.circle(cx, cy, size, colors[k % colors.length], 1).setDepth(6);
+          const tx = cx + Math.cos(ang) * dist, ty = cy + Math.sin(ang) * dist - 14 * dpr;
+          this.tweens.add({
+            targets: p, x: tx, y: ty, alpha: 0, scale: 0.3, duration: 600 + Math.random() * 300, ease: 'Cubic.easeOut',
+            onComplete: () => p.destroy(),
+          });
+        }
       } catch (e) { /* ignore */ }
     }
   }

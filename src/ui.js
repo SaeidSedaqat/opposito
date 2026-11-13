@@ -64,14 +64,15 @@
 
   // ---------- Home ----------
   const home = screen('home',
-    '<div class="topbar"><button class="circ" id="hSet" aria-label="Settings">' + ic('gear') + '</button>' +
-    '<button class="circ" id="hHelp" aria-label="How to play">' + ic('help') + '</button><span class="grow"></span>' +
-    '<button class="circ" id="hShop" aria-label="Shop">' + ic('bag') + '</button></div>' +
-    '<div class="homebody"><div class="logo big">' + logoHtml() + '</div>' +
+    '<div class="homebody"><div class="homemid"><div class="logo big">' + logoHtml() + '</div>' +
     '<div class="menu">' +
     '<button class="btn primary big" id="hLevels"><span class="t">Levels</span><span class="s" id="hLevelN"></span></button>' +
     '<button class="btn big" id="hFree"><span class="t">Free Play</span><span class="s">Any size, any difficulty</span></button>' +
     '<button class="btn big daily" id="hDaily"><span class="t">Daily</span><span class="s" id="hDailyS"></span></button>' +
+    '</div></div>' +
+    '<div class="footrow">' +
+    '<button class="btn foot" id="hSet">' + ic('gear') + '<span class="t">Settings</span></button>' +
+    '<button class="btn foot" id="hShop">' + ic('bag') + '<span class="t">Shop</span></button>' +
     '</div></div>');
 
   function logoHtml() {
@@ -94,7 +95,6 @@
       (ds.solved ? ' · solved in ' + fmtTime(ds.solved.time) : '');
   };
   home.querySelector('#hSet').onclick = () => openSettings();
-  home.querySelector('#hHelp').onclick = () => openHelp();
   home.querySelector('#hShop').onclick = () => show('shop');
   home.querySelector('#hLevels').onclick = () => OP.game.start('levels');
   home.querySelector('#hFree').onclick = () => show('free');
@@ -325,10 +325,12 @@
   function openSettings() {
     const m = modal('<div class="panel"><h2>Settings</h2><div class="toggles col">' +
       toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + toggleRow('auto', 'Auto-highlight mistakes') + '</div>' +
+      '<button class="btn" id="mHelp">' + ic('help') + 'How to play</button>' +
       '<button class="btn warn" id="mReset">Reset progress</button>' +
       '<button class="btn primary" data-x="close">Done</button>' +
       '<div class="credit">Created by SaeidGD</div></div>');
     bindToggles(m);
+    m.querySelector('#mHelp').onclick = () => openHelp();
     m.querySelector('#mReset').onclick = () => confirmBox('Reset progress?', 'Coins, levels, skins, boosters and streaks will be erased. This cannot be undone.', 'Reset', () => {
       OP.save.reset();
       if (OP.game) OP.game.clearCache();
