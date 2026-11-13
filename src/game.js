@@ -149,13 +149,18 @@
     updateBoosterUI();
     saveCur();
 
-    if (spec.tut === 3) OP.ui.msg('Frozen tiles (the padlock) can’t change. Fill in the rest!', { ms: 3400 });
+    if (spec.tut === 3) OP.ui.msg('Frozen tiles (shaded) can’t change. Fill in the rest!', { ms: 3400 });
     else OP.ui.msg('');
 
     if (which === 'levels') prefetch(C.levelSpec(spec.level + 1));
+
+    // Safety net: if a reload lands us back on a board that was already fully (and correctly)
+    // filled in — e.g. the page closed during the win delay below — finish the win now.
+    if (isFull(board)) checkWinOrBroken();
   }
 
   // ---------- rendering helpers ----------
+  let badTimer = null;
   function afterPlace() {
     fx.broken = [];
     const newGood = OP.Puzzle.goodLines(pz, board);
@@ -165,8 +170,17 @@
       fx.glowLines = added; OP.audio.play('line');
       setTimeout(() => { fx.glowLines = []; if (scene) scene.applyFx(); }, 650);
     }
-    fx.bad = S().settings.auto ? Array.from(OP.Puzzle.violations(pz, board).cells) : [];
+    // Clear any stale red mark right away, but don't flag a fresh one instantly — give the
+    // player a beat to fix it themselves before auto-highlight calls it out.
+    fx.bad = [];
     if (scene) scene.updatePieces(); // just the pieces moved/changed, not the board frame or links
+    clearTimeout(badTimer);
+    if (S().settings.auto) {
+      badTimer = setTimeout(() => {
+        fx.bad = Array.from(OP.Puzzle.violations(pz, board).cells);
+        if (scene) scene.applyFx();
+      }, 500);
+    }
   }
   function flashBad(cells, ms) {
     fx.bad = cells; if (scene) scene.applyFx();
@@ -180,7 +194,12 @@
   function checkWinOrBroken() {
     if (!isFull(board)) return;
     const v = OP.Puzzle.violations(pz, board);
-    if (v.cells.size === 0) { win(); }
+    if (v.cells.size === 0) {
+      if (mode === 'daily') stopDailyTimer(); // freeze the clock at the exact solve moment
+      OP.audio.play('win');
+      if (scene) scene.winRipple();
+      setTimeout(win, 2000); // let the player enjoy the finished board before the modal covers it
+    }
     else {
       fx.broken = Array.from(v.cells);
       if (scene) { scene.applyFx(); scene.shakeBoard(); }
@@ -202,8 +221,6 @@
     S().level = spec.level + 1;
     curObj().levels = null;
     OP.save.persist();
-    OP.audio.play('win');
-    if (scene) scene.winRipple();
     prefetch(C.levelSpec(S().level));
     OP.ui.openWin({ mode: 'levels', coins, bonus, next: () => start('levels'), home: () => OP.ui.show('home') });
   }
@@ -211,8 +228,6 @@
     S().free.count = (S().free.count || 0) + 1;
     curObj().free = null;
     OP.save.persist();
-    OP.audio.play('win');
-    if (scene) scene.winRipple();
     OP.ui.openWin({ mode: 'free', label: 'Nice work!', next: () => start('free'), home: () => OP.ui.show('home') });
   }
   function winDaily() {
@@ -223,9 +238,6 @@
     d.dates.push(t.key);
     curObj().daily = null;
     OP.save.persist();
-    OP.audio.play('win');
-    stopDailyTimer();
-    if (scene) scene.winRipple();
     OP.ui.openWin({ mode: 'daily', time: d.solved.time, streak: d.streak, home: () => OP.ui.show('home') });
   }
 
@@ -299,18 +311,16 @@
     armed = null; updateBoosterUI();
   }
   function doReveal(i) {
-    const n = pz.n, r = (i / n) | 0, c = i % n, rowL = r, colL = n + c;
-    const P = OP.Puzzle.ctx(n, pz.links, pz.unique);
-    const scoreLine = (L) => { let s = 0; P.lc[L].forEach((ci) => { if (board[ci] < 0) s++; else if (board[ci] !== pz.sol[ci]) s++; }); return s; };
-    const rs = scoreLine(rowL), cs2 = scoreLine(colL);
-    if (rs === 0 && cs2 === 0) { OP.ui.msg('That line is already done', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
+    if (pz.givens[i] >= 0) { OP.ui.msg('That one is frozen', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
+    if (board[i] === pz.sol[i]) { OP.ui.msg('That tile is already correct', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
     const B = S().boosters;
     if (B.reveal <= 0) { armed = null; updateBoosterUI(); OP.ui.boosterAd('reveal', false, updateBoosterUI); return; }
-    const L = rs >= cs2 ? rowL : colL;
-    P.lc[L].forEach((ci) => { if (pz.givens[ci] < 0 && board[ci] !== pz.sol[ci]) { pushHist(ci, board[ci], pz.sol[ci]); board[ci] = pz.sol[ci]; } });
+    const before = board[i];
+    pushHist(i, before, pz.sol[i]);
+    board[i] = pz.sol[i];
     B.reveal--; OP.save.soon();
     armed = null; updateBoosterUI();
-    OP.audio.play('line');
+    OP.audio.play(pz.sol[i] === 0 ? 'fire' : 'ice');
     afterPlace(); saveCur(); checkWinOrBroken();
   }
   function booster(k) {
@@ -335,7 +345,7 @@
     if (!pz) return;
     board = Array.from(pz.givens); hist = [];
     prevGood = []; fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
-    armed = null;
+    armed = null; clearTimeout(badTimer);
     if (scene) scene.updatePieces();
     updateBoosterUI(); saveCur();
     if (mode === 'daily') startDailyTimer();
@@ -358,6 +368,7 @@
   }
   function refreshMarks() {
     if (!pz) return;
+    clearTimeout(badTimer);
     fx.bad = S().settings.auto ? Array.from(OP.Puzzle.violations(pz, board).cells) : [];
     if (scene) scene.applyFx();
   }
@@ -433,8 +444,8 @@
       const pad = L.size * 0.03, cs = (L.size - 2 * pad) / n;
       return { ox: L.x * dpr, oy: L.y * dpr, P: pad * dpr, CS: cs * dpr, Sz: L.size * dpr };
     }
-    // Full rebuild: the cell frame, frozen locks and link dots. Only needed when the layout
-    // or the puzzle itself changes, never on every tap (that's updatePieces, below).
+    // Full rebuild: the cell frame and link dots. Only needed when the layout or the puzzle
+    // itself changes, never on every tap (that's updatePieces, below).
     redraw() {
       const L = this.L;
       if (!pz || !L) return;
@@ -454,12 +465,6 @@
         this.gBg.fillRoundedRect(cx + 1, cy + 1, CS - 2, CS - 2, 6 * dpr);
         this.gBg.lineStyle(2 * dpr, frozen ? 0xc9d0db : 0xe3e7ee, 1);
         this.gBg.strokeRoundedRect(cx + 1, cy + 1, CS - 2, CS - 2, 6 * dpr);
-        if (frozen) {
-          this.gBg.lineStyle(2 * dpr, 0xb8c0cc, 1);
-          this.gBg.strokeCircle(cx + CS / 2, cy + CS * 0.44, CS * 0.1);
-          this.gBg.fillStyle(0xb8c0cc, 1);
-          this.gBg.fillRoundedRect(cx + CS * 0.38, cy + CS * 0.5, CS * 0.24, CS * 0.18, 2 * dpr);
-        }
       }
       this.gLink.clear();
       (pz.links || []).forEach(([a, b]) => {
