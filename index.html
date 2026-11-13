@@ -8,8 +8,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.10') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.10') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.20') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.20') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -182,6 +182,25 @@ img{display:block; max-width:100%;}
 .pair img{width:46px; height:46px;}
 .act{min-height:48px;}
 
+/* ---------- how to play ---------- */
+.panel.help{width:min(420px,100%); text-align:left;}
+.panel.help h2{text-align:center;}
+.help-rule{border-top:1px solid var(--line); padding-top:12px; margin-top:4px;}
+.help-rule:first-of-type{border-top:none; padding-top:0; margin-top:0;}
+.help-rule h3{margin:0 0 4px; font-size:14.5px; font-weight:800;}
+.help-rule p{margin:0 0 8px; text-align:left; font-size:13px;}
+.ex-group{display:flex; gap:8px; flex-wrap:wrap;}
+.ex-row{display:flex; align-items:center; gap:4px; padding:6px 8px; border-radius:12px; border:2px solid; flex:1; min-width:120px;}
+.ex-row i{width:26px; height:26px; border-radius:6px; background:#fff; display:flex; align-items:center; justify-content:center; flex:none;}
+.ex-row i img{width:72%; height:72%;}
+.ex-good{border-color:var(--good); background:#EFFBF3;}
+.ex-bad{border-color:var(--bad); background:#FFF1F0;}
+.ex-mark{width:16px; height:16px; margin-left:auto; flex:none;}
+.ex-good .ex-mark{color:var(--good);}
+.ex-bad .ex-mark{color:var(--bad);}
+.ex-link{width:9px; height:9px; border-radius:50%; flex:none; background:linear-gradient(90deg,var(--fire) 50%,var(--ice) 50%); box-shadow:0 0 0 2px #fff;}
+.ex-grid{display:grid; grid-template-columns:repeat(var(--n),26px); gap:3px;}
+
 /* ---------- login track ---------- */
 .panel.login{width:min(400px,100%);}
 .days{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
@@ -250,7 +269,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.10';
+  var V = '0.1.20';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3592],
@@ -258,8 +277,8 @@ img{display:block; max-width:100%;}
     ['src/skins.js', 12438],
     ['src/audio.js', 2574],
     ['src/puzzle.js', 17033],
-    ['src/ui.js', 28696],
-    ['src/game.js', 26274],
+    ['src/ui.js', 32010],
+    ['src/game.js', 26328],
     ['src/main.js', 1174]
   ];
   var SFX = [

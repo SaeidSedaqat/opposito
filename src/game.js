@@ -184,7 +184,7 @@
 
   function showStep() {
     if (!tut || !tut.target) return;
-    OP.ui.msg(stepText(tut.target), { ms: 4200 });
+    OP.ui.msg(stepText(tut.target)); // persists until the next tap replaces it, like a real hint banner
   }
   function computeTarget() {
     tut.target = OP.Puzzle.nextStep(pz, board, tut.prefer);

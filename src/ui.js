@@ -20,6 +20,8 @@
     lock: '<svg viewBox="0 0 24 24"><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="5" y="10.5" width="14" height="10.5" rx="2.6" fill="currentColor"/></svg>',
     ad: '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="currentColor"/><path d="M10 9v6l5-3z" fill="#fff"/></svg>',
     tick: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    cross: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+    help: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" opacity="0"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.5.8c0 1.6-1.3 2-2.1 2.7-.5.5-.6.9-.6 1.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.4" r="1.3" fill="currentColor"/></svg>',
     coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#F5B83D"/><circle cx="12" cy="12" r="7.2" fill="#FFD36B"/><path d="M12 7.6l1.3 2.9 3.1.3-2.4 2 .8 3.1-2.8-1.7-2.8 1.7.8-3.1-2.4-2 3.1-.3z" fill="#F0A92E"/></svg>',
     gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="5" rx="1.5" fill="currentColor"/><rect x="4.5" y="13" width="15" height="8" rx="1.5" fill="currentColor" opacity=".85"/><rect x="11" y="9" width="2" height="12" fill="#fff" opacity=".8"/><path d="M12 9C10 5 6 5 7 7.5S12 9 12 9zm0 0c2-4 6-4 5-1.5S12 9 12 9z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   };
@@ -62,7 +64,8 @@
 
   // ---------- Home ----------
   const home = screen('home',
-    '<div class="topbar"><button class="circ" id="hSet" aria-label="Settings">' + ic('gear') + '</button><span class="grow"></span>' +
+    '<div class="topbar"><button class="circ" id="hSet" aria-label="Settings">' + ic('gear') + '</button>' +
+    '<button class="circ" id="hHelp" aria-label="How to play">' + ic('help') + '</button><span class="grow"></span>' +
     '<button class="circ" id="hShop" aria-label="Shop">' + ic('bag') + '</button></div>' +
     '<div class="homebody"><div class="logo big">' + logoHtml() + '</div>' +
     '<div class="menu">' +
@@ -91,6 +94,7 @@
       (ds.solved ? ' · solved in ' + fmtTime(ds.solved.time) : '');
   };
   home.querySelector('#hSet').onclick = () => openSettings();
+  home.querySelector('#hHelp').onclick = () => openHelp();
   home.querySelector('#hShop').onclick = () => show('shop');
   home.querySelector('#hLevels').onclick = () => OP.game.start('levels');
   home.querySelector('#hFree').onclick = () => show('free');
@@ -344,11 +348,51 @@
     const m = modal('<div class="panel"><h2>Paused</h2>' +
       '<button class="btn primary" data-x="close">' + ic('play') + 'Resume</button>' +
       '<button class="btn" id="pRestart">Restart</button>' +
+      '<button class="btn" id="pHelp">' + ic('help') + 'How to play</button>' +
       '<div class="toggles col">' + toggleRow('auto', 'Auto-highlight mistakes') + toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + '</div>' +
       '<button class="btn" id="pHome">' + ic('home') + 'Home</button></div>', { onClose: handlers.onClose });
     bindToggles(m);
     m.querySelector('#pRestart').onclick = () => m.close(handlers.restart);
+    m.querySelector('#pHelp').onclick = () => openHelp();
     m.querySelector('#pHome').onclick = () => m.close(handlers.home);
+  }
+
+  // ---------- How to Play: the rules, each with a tiny valid/invalid example ----------
+  function exPair(pieces, valid) {
+    const sk = OP.skins.get(S().skin);
+    const img = (v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>';
+    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + pieces.map(img).join('') +
+      '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
+  }
+  function exLink(valid) {
+    const sk = OP.skins.get(S().skin);
+    const img = (v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>';
+    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + img(0) + '<span class="ex-link"></span>' + img(valid ? 1 : 0) +
+      '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
+  }
+  function exGrid(rows, valid) {
+    const sk = OP.skins.get(S().skin);
+    const n = rows[0].length;
+    const cells = rows.flat().map((v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>').join('');
+    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '"><div class="ex-grid" style="--n:' + n + '">' + cells + '</div>' +
+      '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
+  }
+  function helpSection(title, text, examplesHtml) {
+    return '<div class="help-rule"><h3>' + esc(title) + '</h3><p>' + esc(text) + '</p><div class="ex-group">' + examplesHtml + '</div></div>';
+  }
+  function openHelp() {
+    const sk = OP.skins.get(S().skin);
+    const body =
+      helpSection('Balance', 'Every row and column needs an equal number of ' + sk.an + ' and ' + sk.bn + '.',
+        exGrid([[0, 0, 1, 1]], true) + exGrid([[0, 0, 0, 1]], false)) +
+      helpSection('No three in a row', 'Two of the same piece side by side is fine — three in a row is not.',
+        exPair([0, 0, 1], true) + exPair([0, 0, 0], false)) +
+      helpSection('Melt links', 'Tiles joined by the little dot must always be opposite.',
+        exLink(true) + exLink(false)) +
+      helpSection('No twin rows', 'In some puzzles, no two rows or columns can match each other exactly.',
+        exGrid([[0, 1, 1, 0], [1, 0, 0, 1]], true) + exGrid([[0, 1, 1, 0], [0, 1, 1, 0]], false));
+    modal('<div class="panel help"><h2>How to Play</h2><p class="sub">Fill every tile so all the rules below hold at once.</p>' +
+      body + '<button class="btn primary" data-x="close">Got it</button></div>');
   }
 
   // Login reward track: seven separate days, never resets.
@@ -483,7 +527,7 @@
   OP.ui = {
     show, refresh, get current() { return current; },
     msg, placeHud, setHud, setTimer, setBoosters, pointer,
-    modal, modalOpen, openSettings, openPause, openWin, maybeLogin, boosterAd,
+    modal, modalOpen, openSettings, openPause, openHelp, openWin, maybeLogin, boosterAd,
     rewardedAd, adBreak, toast, fmtTime, dailyState, logoHtml, esc,
   };
 })();
