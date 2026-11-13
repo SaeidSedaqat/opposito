@@ -145,7 +145,7 @@
     if (which === 'daily') { OP.ui.setTimer(elapsed); startDailyTimer(); } else stopDailyTimer();
 
     prevGood = OP.Puzzle.goodLines(pz, board);
-    if (scene) { if (curL) scene.setLayout(curL); scene.redraw(); scene.applyFx(); }
+    if (scene) { if (curL) scene.setLayout(curL); else scene.redraw(); }
     updateBoosterUI();
     saveCur();
 
@@ -166,7 +166,7 @@
       setTimeout(() => { fx.glowLines = []; if (scene) scene.applyFx(); }, 650);
     }
     fx.bad = S().settings.auto ? Array.from(OP.Puzzle.violations(pz, board).cells) : [];
-    if (scene) { scene.redraw(); scene.applyFx(); }
+    if (scene) scene.updatePieces(); // just the pieces moved/changed, not the board frame or links
   }
   function flashBad(cells, ms) {
     fx.bad = cells; if (scene) scene.applyFx();
@@ -336,7 +336,7 @@
     board = Array.from(pz.givens); hist = [];
     prevGood = []; fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     armed = null;
-    if (scene) { scene.redraw(); scene.applyFx(); }
+    if (scene) scene.updatePieces();
     updateBoosterUI(); saveCur();
     if (mode === 'daily') startDailyTimer();
   }
@@ -364,7 +364,7 @@
   function clearCache() {
     mode = null; curSpec = null; pz = null; board = null; hist = []; armed = null;
     stopDailyTimer();
-    if (scene) { scene.redraw(); scene.applyFx(); }
+    if (scene) scene.updatePieces(); // pz is null now, so this just no-ops
   }
   function adPause(on) {
     adPaused = !!on;
@@ -395,7 +395,8 @@
       });
     }
     create() {
-      this.dpr = window.devicePixelRatio || 1;
+      // Capped: a full 3x device pixel ratio triples the fill-rate for no visible gain on a flat-shaded board.
+      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
       this.gBg = this.add.graphics().setDepth(0);
       this.gLink = this.add.graphics().setDepth(2);
       this.gFx = this.add.graphics().setDepth(3);
@@ -427,14 +428,19 @@
       }
       this.n = n;
     }
+    geom() {
+      const L = this.L, n = pz.n, dpr = this.dpr;
+      const pad = L.size * 0.03, cs = (L.size - 2 * pad) / n;
+      return { ox: L.x * dpr, oy: L.y * dpr, P: pad * dpr, CS: cs * dpr, Sz: L.size * dpr };
+    }
+    // Full rebuild: the cell frame, frozen locks and link dots. Only needed when the layout
+    // or the puzzle itself changes, never on every tap (that's updatePieces, below).
     redraw() {
       const L = this.L;
       if (!pz || !L) return;
       const n = pz.n, dpr = this.dpr;
       this.ensureCells(n);
-      const pad = L.size * 0.03, cs = (L.size - 2 * pad) / n;
-      const sk = skin();
-      const ox = L.x * dpr, oy = L.y * dpr, P = pad * dpr, CS = cs * dpr, Sz = L.size * dpr;
+      const g = this.geom(), ox = g.ox, oy = g.oy, P = g.P, CS = g.CS, Sz = g.Sz;
       this.gBg.clear();
       this.gBg.fillStyle(0x1a2030, 0.08);
       this.gBg.fillRoundedRect(ox - 2 * dpr, oy + 4 * dpr, Sz + 4 * dpr, Sz + 4 * dpr, 18 * dpr);
@@ -454,14 +460,6 @@
           this.gBg.fillStyle(0xb8c0cc, 1);
           this.gBg.fillRoundedRect(cx + CS * 0.38, cy + CS * 0.5, CS * 0.24, CS * 0.18, 2 * dpr);
         }
-        const cont = this.cellC[i];
-        cont.setPosition(cx + CS / 2, cy + CS / 2);
-        const v = board ? board[i] : -1;
-        if (v < 0) cont.pieceImg.setVisible(false);
-        else {
-          const nm = v === 0 ? sk.pa : sk.pb;
-          cont.pieceImg.setTexture('pc_' + nm).setVisible(true).setDisplaySize(CS * 0.7, CS * 0.7);
-        }
       }
       this.gLink.clear();
       (pz.links || []).forEach(([a, b]) => {
@@ -480,6 +478,27 @@
         this.gLink.lineStyle(2 * dpr, 0xffffff, 1);
         this.gLink.strokeCircle(mx, my, rad);
       });
+      this.updatePieces();
+    }
+    // Light update: only the piece sprites (position + texture). Called on every tap/undo/hint
+    // so we're not re-tessellating ~100+ rounded rects of static board frame each time.
+    updatePieces() {
+      const L = this.L;
+      if (!pz || !L) return;
+      this.ensureCells(pz.n);
+      const n = pz.n, sk = skin(), g = this.geom();
+      for (let i = 0; i < n * n; i++) {
+        const r = (i / n) | 0, c = i % n;
+        const cx = g.ox + g.P + c * g.CS, cy = g.oy + g.P + r * g.CS;
+        const cont = this.cellC[i];
+        cont.setPosition(cx + g.CS / 2, cy + g.CS / 2);
+        const v = board ? board[i] : -1;
+        if (v < 0) cont.pieceImg.setVisible(false);
+        else {
+          const nm = v === 0 ? sk.pa : sk.pb;
+          cont.pieceImg.setTexture('pc_' + nm).setVisible(true).setDisplaySize(g.CS * 0.7, g.CS * 0.7);
+        }
+      }
       this.applyFx();
     }
     applyFx() {

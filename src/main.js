@@ -2,7 +2,9 @@
 (function () {
   'use strict';
   const OP = window.OP;
-  const DPR = window.devicePixelRatio || 1;
+  // Capped at 2x: a 3x device pixel ratio triples fill-rate for no visible gain on a flat UI,
+  // and BoardScene caps its own dpr to match. Must stay identical to the cap in game.js.
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
 
   function size() { return { w: Math.max(1, window.innerWidth), h: Math.max(1, window.innerHeight) }; }
   const sz = size();
