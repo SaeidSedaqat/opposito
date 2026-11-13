@@ -1,0 +1,489 @@
+// Opposito: DOM screens, modals, toasts and the placeholder ad overlay.
+(function () {
+  'use strict';
+  const OP = window.OP;
+  const S = () => OP.save.d;
+  const C = OP.config;
+
+  // ---------- original UI icons ----------
+  const ICON = {
+    gear: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M10.6 2h2.8l.5 2.6c.6.2 1.2.5 1.7.9l2.5-.9 1.4 2.4-2 1.7c.1.6.1 1.3 0 1.9l2 1.7-1.4 2.4-2.5-.9c-.5.4-1.1.7-1.7.9l-.5 2.6h-2.8l-.5-2.6c-.6-.2-1.2-.5-1.7-.9l-2.5.9-1.4-2.4 2-1.7a6 6 0 0 1 0-1.9l-2-1.7 1.4-2.4 2.5.9c.5-.4 1.1-.7 1.7-.9zM12 8.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8z" transform="translate(0 1.5)"/></svg>',
+    bag: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M6 8h12l1 12.2c.1.9-.6 1.8-1.6 1.8H6.6c-1 0-1.7-.9-1.6-1.8z"/><path d="M9 10V7a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    back: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    pause: '<svg viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.6" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1.6" fill="currentColor"/></svg>',
+    undo: '<svg viewBox="0 0 24 24"><path d="M9 7H5V3" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 7.2A8 8 0 1 1 4.6 15" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+    hint: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a7 7 0 0 0-4.2 12.6c.7.5 1.2 1.3 1.2 2.2V18h6v-1.2c0-.9.5-1.7 1.2-2.2A7 7 0 0 0 12 2z"/><rect x="9" y="19.3" width="6" height="2.7" rx="1.3" fill="currentColor"/></svg>',
+    check: '<svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="7" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.6 15.6L21 21" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/><path d="M7.3 10.6l2.2 2.2 4-4.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    reveal: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 5C6.5 5 2.7 9.5 1.5 12c1.2 2.5 5 7 10.5 7s9.3-4.5 10.5-7C21.3 9.5 17.5 5 12 5zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>',
+    home: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 3l9 8h-2.5v9.5h-5v-6h-3v6h-5V11H3z"/></svg>',
+    play: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10-6.8a1 1 0 0 0 0-1.6l-10-6.8C8.9 3.9 8 4.4 8 5.2z"/></svg>',
+    lock: '<svg viewBox="0 0 24 24"><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.4"/><rect x="5" y="10.5" width="14" height="10.5" rx="2.6" fill="currentColor"/></svg>',
+    ad: '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="currentColor"/><path d="M10 9v6l5-3z" fill="#fff"/></svg>',
+    tick: '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#F5B83D"/><circle cx="12" cy="12" r="7.2" fill="#FFD36B"/><path d="M12 7.6l1.3 2.9 3.1.3-2.4 2 .8 3.1-2.8-1.7-2.8 1.7.8-3.1-2.4-2 3.1-.3z" fill="#F0A92E"/></svg>',
+    gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="5" rx="1.5" fill="currentColor"/><rect x="4.5" y="13" width="15" height="8" rx="1.5" fill="currentColor" opacity=".85"/><rect x="11" y="9" width="2" height="12" fill="#fff" opacity=".8"/><path d="M12 9C10 5 6 5 7 7.5S12 9 12 9zm0 0c2-4 6-4 5-1.5S12 9 12 9z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+  };
+  const ic = (k) => '<i class="ico">' + ICON[k] + '</i>';
+  const flame = () => '<img class="flame" alt="" src="' + OP.skins.dataUri('fire', 64) + '">';
+
+  function h(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function fmtTime(sec) { sec = Math.max(0, Math.floor(sec)); const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + (s < 10 ? '0' : '') + s; }
+
+  const root = document.getElementById('ui');
+  const screens = {};
+  let current = null;
+
+  // ---------- screens ----------
+  function show(name) {
+    if (current === name) { refresh(name); return; }
+    const prev = current ? screens[current] : null;
+    current = name;
+    const el = screens[name];
+    refresh(name);
+    if (prev) {
+      prev.classList.remove('on');
+      setTimeout(() => { if (current !== prev.dataset.name) prev.hidden = true; }, 220);
+    }
+    el.hidden = false;
+    void el.offsetWidth;
+    el.classList.add('on');
+    if (OP.game) OP.game.onScreen(name);
+  }
+  function refresh(name) { const f = renderers[name]; if (f) f(); }
+  const renderers = {};
+
+  function screen(name, html) {
+    const el = h('<section class="screen" data-name="' + name + '" hidden>' + html + '</section>');
+    root.appendChild(el);
+    screens[name] = el;
+    return el;
+  }
+
+  // ---------- Home ----------
+  const home = screen('home',
+    '<div class="topbar"><button class="circ" id="hSet" aria-label="Settings">' + ic('gear') + '</button><span class="grow"></span>' +
+    '<button class="circ" id="hShop" aria-label="Shop">' + ic('bag') + '</button></div>' +
+    '<div class="homebody"><div class="logo big">' + logoHtml() + '</div>' +
+    '<div class="menu">' +
+    '<button class="btn primary big" id="hLevels"><span class="t">Levels</span><span class="s" id="hLevelN"></span></button>' +
+    '<button class="btn big" id="hFree"><span class="t">Free Play</span><span class="s">Any size, any difficulty</span></button>' +
+    '<button class="btn big daily" id="hDaily"><span class="t">Daily</span><span class="s" id="hDailyS"></span></button>' +
+    '</div></div>');
+
+  function logoHtml() {
+    return '<img alt="" src="' + OP.skins.dataUri('fire', 96) + '"><span class="word">Opposito</span><img alt="" src="' + OP.skins.dataUri('ice', 96) + '">';
+  }
+
+  function dailyState() {
+    const d = S().daily, t = C.today(), y = C.dayKeyOffset(t.key, -1);
+    const streak = d.last === t.key || d.last === y ? d.streak : 0;
+    const solved = d.solved && d.solved.date === t.key ? d.solved : null;
+    return { streak, solved, t };
+  }
+
+  renderers.home = function () {
+    home.querySelector('#hLevelN').textContent = 'Level ' + S().level;
+    const ds = dailyState();
+    const b = home.querySelector('#hDaily');
+    b.disabled = !!ds.solved;
+    home.querySelector('#hDailyS').innerHTML = flame() + ds.streak + ' day streak' +
+      (ds.solved ? ' · solved in ' + fmtTime(ds.solved.time) : '');
+  };
+  home.querySelector('#hSet').onclick = () => openSettings();
+  home.querySelector('#hShop').onclick = () => show('shop');
+  home.querySelector('#hLevels').onclick = () => OP.game.start('levels');
+  home.querySelector('#hFree').onclick = () => show('free');
+  home.querySelector('#hDaily').onclick = () => { if (!dailyState().solved) OP.game.start('daily'); };
+
+  // ---------- Free Play ----------
+  const free = screen('free',
+    '<div class="topbar"><button class="circ" id="fBack" aria-label="Back">' + ic('back') + '</button>' +
+    '<h1 class="title">Free Play</h1><span class="circ ghost"></span></div>' +
+    '<div class="freebody">' +
+    '<div class="lbl">Size</div><div class="pills" id="fSize"></div>' +
+    '<div class="lbl">Difficulty</div><div class="pills" id="fDiff"></div>' +
+    '<div class="toggles"><label class="tg"><span>Melt links</span><input type="checkbox" id="fLinks"><b></b></label>' +
+    '<label class="tg"><span>No twin rows</span><input type="checkbox" id="fTwin"><b></b></label></div>' +
+    '<div class="preview" id="fPrev"></div>' +
+    '<button class="btn primary big play" id="fPlay">' + ic('play') + '<span class="t">Play</span></button>' +
+    '</div>');
+
+  renderers.free = function () {
+    const f = S().free;
+    if (f.n === 4) f.diff = 1;
+    free.querySelector('#fSize').innerHTML = C.SIZES.map((n) => '<button class="pill' + (f.n === n ? ' on' : '') + '" data-n="' + n + '">' + n + '×' + n + '</button>').join('');
+    free.querySelector('#fDiff').innerHTML = C.DIFFS.map((d, k) => '<button class="pill' + (f.diff === k + 1 ? ' on' : '') + '" data-d="' + (k + 1) + '"' + (f.n === 4 && k > 0 ? ' disabled' : '') + '>' + d + '</button>').join('');
+    free.querySelector('#fLinks').checked = f.links;
+    free.querySelector('#fTwin').checked = f.twin;
+    const p = free.querySelector('#fPrev');
+    p.style.setProperty('--n', f.n);
+    let cells = '';
+    for (let i = 0; i < f.n * f.n; i++) cells += '<i></i>';
+    p.innerHTML = cells;
+  };
+  free.querySelector('#fSize').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S().free.n = +b.dataset.n; OP.save.soon(); renderers.free(); };
+  free.querySelector('#fDiff').onclick = (e) => { const b = e.target.closest('button'); if (!b || b.disabled) return; S().free.diff = +b.dataset.d; OP.save.soon(); renderers.free(); };
+  free.querySelector('#fLinks').onchange = (e) => { S().free.links = e.target.checked; OP.audio.play('click'); OP.save.soon(); };
+  free.querySelector('#fTwin').onchange = (e) => { S().free.twin = e.target.checked; OP.audio.play('click'); OP.save.soon(); };
+  free.querySelector('#fBack').onclick = () => show('home');
+  free.querySelector('#fPlay').onclick = () => OP.game.start('free');
+
+  // ---------- Shop ----------
+  const shop = screen('shop',
+    '<div class="topbar"><button class="circ" id="sBack" aria-label="Back">' + ic('back') + '</button>' +
+    '<h1 class="title">Shop</h1><span class="coins" id="sCoins"></span></div>' +
+    '<div class="shopbody"><div class="cards" id="sCards"></div></div>');
+
+  function miniBoard(sk, n) {
+    const pat = n === 4 ? [0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0] : [0, 1, 1, 0];
+    const a = OP.skins.dataUri(sk.pa, 96), b = OP.skins.dataUri(sk.pb, 96);
+    return '<div class="mini" style="--n:' + n + ';background:linear-gradient(135deg,' + sk.bg[0] + ',' + sk.bg[1] + ')">' +
+      pat.map((v) => '<i><img alt="" src="' + (v ? b : a) + '"></i>').join('') + '</div>';
+  }
+  function skinState(sk) {
+    const d = S();
+    if (d.skin === sk.id) return { k: 'equipped', html: ic('tick') + 'Equipped' };
+    if (d.owned.indexOf(sk.id) >= 0) return { k: 'equip', html: 'Equip' };
+    const u = sk.unlock;
+    if (u.type === 'coins') return { k: d.coins >= u.price ? 'buy' : 'poor', html: ic('coin') + u.price };
+    if (u.type === 'ad') return { k: 'ad', html: ic('ad') + 'Watch ad' };
+    if (u.type === 'login') return { k: 'locked', html: ic('lock') + 'Day ' + u.day + ' login' };
+    return { k: 'locked', html: '' };
+  }
+  renderers.shop = function () {
+    shop.querySelector('#sCoins').innerHTML = ic('coin') + '<b>' + S().coins + '</b>';
+    shop.querySelector('#sCards').innerHTML = OP.skins.list.map((sk) => {
+      const st = skinState(sk);
+      return '<button class="card ' + st.k + '" data-id="' + sk.id + '">' + miniBoard(sk, 2) +
+        '<span class="nm">' + esc(sk.name) + '</span><span class="st ' + st.k + '">' + st.html + '</span></button>';
+    }).join('');
+  };
+  shop.querySelector('#sBack').onclick = () => show('home');
+  shop.querySelector('#sCards').onclick = (e) => { const b = e.target.closest('.card'); if (b) skinPreview(OP.skins.get(b.dataset.id)); };
+
+  function skinAction(sk, after) {
+    const d = S(), st = skinState(sk);
+    if (st.k === 'equip') { d.skin = sk.id; OP.audio.play('click'); }
+    else if (st.k === 'buy') { d.coins -= sk.unlock.price; d.owned.push(sk.id); d.skin = sk.id; OP.audio.play('coin'); toast(sk.name + ' unlocked!'); }
+    else if (st.k === 'ad') {
+      return rewardedAd(() => { if (d.owned.indexOf(sk.id) < 0) d.owned.push(sk.id); d.skin = sk.id; OP.save.persist(); OP.audio.play('reward'); toast(sk.name + ' unlocked!'); renderers.shop(); if (after) after(); });
+    } else if (st.k === 'poor') { toast('Not enough coins yet'); OP.audio.play('wrong', 0.5); return; }
+    else return;
+    OP.save.persist();
+    renderers.shop();
+    if (after) after();
+  }
+
+  function skinPreview(sk) {
+    const m = modal('<div class="panel preview-skin"><h2>' + esc(sk.name) + '</h2>' + miniBoard(sk, 4) +
+      '<div class="pair"><span><img alt="" src="' + OP.skins.dataUri(sk.pa, 64) + '">' + esc(sk.an) + '</span><span><img alt="" src="' + OP.skins.dataUri(sk.pb, 64) + '">' + esc(sk.bn) + '</span></div>' +
+      '<div class="row2"><button class="btn" data-x="close">Close</button><button class="btn primary act"></button></div></div>');
+    const act = m.querySelector('.act');
+    const paint = () => {
+      const st = skinState(sk);
+      act.innerHTML = st.html; act.className = 'btn act ' + (st.k === 'equipped' || st.k === 'locked' || st.k === 'poor' ? 'flat' : 'primary');
+      act.disabled = st.k === 'equipped' || st.k === 'locked';
+    };
+    paint();
+    act.onclick = () => skinAction(sk, paint);
+  }
+
+  // ---------- Game HUD ----------
+  const game = screen('game',
+    '<button class="circ" id="gPause" aria-label="Pause">' + ic('pause') + '</button>' +
+    '<div class="glabel" id="gLabel"><b id="gL1"></b><span id="gL2"></span></div>' +
+    '<div class="gtimer" id="gTimer" hidden>0:00</div>' +
+    '<div class="gmsg" id="gMsg"></div>' +
+    '<div class="bar" id="gBar">' +
+    '<button class="boost" data-b="undo" aria-label="Undo">' + ic('undo') + '<span>Undo</span></button>' +
+    '<button class="boost" data-b="hint" aria-label="Hint">' + ic('hint') + '<span>Hint</span><em></em></button>' +
+    '<button class="boost" data-b="check" aria-label="Check">' + ic('check') + '<span>Check</span><em></em></button>' +
+    '<button class="boost" data-b="reveal" aria-label="Reveal">' + ic('reveal') + '<span>Reveal</span><em></em></button>' +
+    '</div>' +
+    '<div class="gen" id="gGen" hidden><i></i><span>Creating puzzle…</span></div>' +
+    '<div class="hand" id="gHand" hidden><i class="ring"></i>' +
+    '<svg viewBox="0 0 64 64"><path d="M25 8c-3 0-5 2.2-5 5v20.5l-3.2-3.1c-2.1-2-5.4-1.9-7.2.4-1.5 1.9-1.4 4.6.2 6.4l12.6 14.2c2.6 3 6.3 4.6 10.2 4.6H40c7.2 0 13-5.8 13-13V30.5c0-2.8-2.2-5-5-5-1 0-1.9.3-2.7.8-.6-2.3-2.7-3.9-5.1-3.9-1.2 0-2.3.4-3.2 1.1-.8-2-2.7-3.3-5-3.3-.7 0-1.4.1-2 .4V13c0-2.8-2.2-5-5-5z" fill="#fff" stroke="#2C3445" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M35.6 26v9M45 27.5V36M30 25v10" stroke="#2C3445" stroke-width="2.6" stroke-linecap="round"/></svg></div>');
+
+  game.querySelector('#gPause').onclick = () => OP.game.pause();
+  game.querySelector('#gBar').onclick = (e) => { const b = e.target.closest('.boost'); if (b && !b.hidden) OP.game.booster(b.dataset.b); };
+
+  const msgEl = game.querySelector('#gMsg');
+  let msgTimer = null;
+  function msg(text, opts) {
+    opts = opts || {};
+    clearTimeout(msgTimer);
+    msgEl.classList.remove('show', 'bad', 'good');
+    void msgEl.offsetWidth;
+    msgEl.innerHTML = text || '';
+    if (text) {
+      msgEl.classList.add('show');
+      if (opts.tone) msgEl.classList.add(opts.tone);
+      if (opts.ms) msgTimer = setTimeout(() => { msgEl.classList.remove('show'); if (opts.after) opts.after(); }, opts.ms);
+    }
+  }
+
+  // Position HUD pieces to match the board layout (CSS px).
+  function placeHud(L) {
+    const pause = game.querySelector('#gPause'), lab = game.querySelector('#gLabel'), tim = game.querySelector('#gTimer'), bar = game.querySelector('#gBar');
+    const sx = L.safe;
+    pause.style.left = sx.l + 12 + 'px'; pause.style.top = sx.t + 10 + 'px';
+    tim.style.right = sx.r + 12 + 'px'; tim.style.top = sx.t + 14 + 'px';
+    if (L.compact) {
+      const colW = Math.max(120, L.x - sx.l - 24);
+      lab.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 68) + 'px;width:' + colW + 'px;transform:none;text-align:left;align-items:flex-start';
+      msgEl.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 128) + 'px;width:' + colW + 'px;transform:none;justify-content:flex-start;text-align:left;height:auto;min-height:40px';
+    } else {
+      lab.style.cssText = 'left:50%;top:' + (sx.t + 8) + 'px;transform:translateX(-50%);width:' + Math.max(120, L.W - 2 * 76) + 'px';
+      msgEl.style.cssText = 'left:50%;top:' + (sx.t + 62) + 'px;transform:translateX(-50%);width:' + Math.min(L.W - 24, 560) + 'px';
+    }
+    const bw = Math.min(Math.max(L.size, 280), 440, L.W - 16);
+    bar.style.left = (L.x + L.size / 2 - bw / 2) + 'px';
+    bar.style.top = (L.y + L.size + 12) + 'px';
+    bar.style.width = bw + 'px';
+    const gen = game.querySelector('#gGen');
+    gen.style.left = L.x + 'px'; gen.style.top = L.y + 'px'; gen.style.width = L.size + 'px'; gen.style.height = L.size + 'px';
+  }
+
+  function setHud(o) {
+    if (o.l1 != null) game.querySelector('#gL1').textContent = o.l1;
+    if (o.l2 != null) game.querySelector('#gL2').textContent = o.l2;
+    if (o.timer != null) game.querySelector('#gTimer').hidden = !o.timer;
+    if (o.bar != null) game.querySelector('#gBar').hidden = !o.bar;
+    if (o.gen != null) game.querySelector('#gGen').hidden = !o.gen;
+  }
+  function setTimer(sec) { game.querySelector('#gTimer').textContent = fmtTime(sec); }
+  function setBoosters(state) {
+    // state: { reveal: bool (show), armed: 'check'|'reveal'|null, undo: bool }
+    const b = S().boosters;
+    game.querySelectorAll('.boost').forEach((el) => {
+      const k = el.dataset.b;
+      if (k === 'reveal') el.hidden = !state.reveal;
+      el.classList.toggle('armed', state.armed === k);
+      if (k === 'undo') { el.classList.toggle('dim', !state.undo); return; }
+      const em = el.querySelector('em');
+      em.textContent = b[k] > 0 ? b[k] : '+';
+      em.classList.toggle('plus', !(b[k] > 0));
+    });
+  }
+
+  const hand = game.querySelector('#gHand');
+  function pointer(x, y) {
+    if (x == null) { hand.hidden = true; return; }
+    hand.hidden = false;
+    hand.style.left = x + 'px'; hand.style.top = y + 'px';
+    hand.classList.remove('again'); void hand.offsetWidth; hand.classList.add('again');
+  }
+
+  // ---------- modals ----------
+  const stack = [];
+  function modal(html, opts) {
+    opts = opts || {};
+    const m = h('<div class="modal"><div class="scrim"></div>' + html + '</div>');
+    root.appendChild(m);
+    stack.push(m);
+    void m.offsetWidth;
+    m.classList.add('on');
+    if (!opts.silent) OP.audio.play('open', 0.7);
+    m.close = function (cb) {
+      if (m.closing) return;
+      m.closing = true;
+      m.classList.remove('on');
+      const i = stack.indexOf(m); if (i >= 0) stack.splice(i, 1);
+      setTimeout(() => { m.remove(); if (cb) cb(); }, 200);
+      if (opts.onClose) opts.onClose();
+    };
+    m.addEventListener('click', (e) => {
+      const x = e.target.closest('[data-x="close"]');
+      if (x) { OP.audio.play('close', 0.7); m.close(); }
+      else if (e.target.classList.contains('scrim') && opts.dismiss !== false) { OP.audio.play('close', 0.7); m.close(); }
+    });
+    return m;
+  }
+  function modalOpen() { return stack.length > 0 || adOn; }
+
+  function toggleRow(key, label) {
+    return '<label class="tg"><span>' + label + '</span><input type="checkbox" data-set="' + key + '"' + (S().settings[key] ? ' checked' : '') + '><b></b></label>';
+  }
+  function bindToggles(m) {
+    m.querySelectorAll('[data-set]').forEach((inp) => {
+      inp.onchange = () => {
+        S().settings[inp.dataset.set] = inp.checked;
+        OP.save.persist();
+        OP.audio.syncMusic();
+        OP.audio.play('click');
+        if (inp.dataset.set === 'auto' && OP.game) OP.game.refreshMarks();
+      };
+    });
+  }
+
+  function openSettings() {
+    const m = modal('<div class="panel"><h2>Settings</h2><div class="toggles col">' +
+      toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + toggleRow('auto', 'Auto-highlight mistakes') + '</div>' +
+      '<button class="btn warn" id="mReset">Reset progress</button>' +
+      '<button class="btn primary" data-x="close">Done</button>' +
+      '<div class="credit">Created by SaeidGD<small>v' + C.VERSION + '</small></div></div>');
+    bindToggles(m);
+    m.querySelector('#mReset').onclick = () => confirmBox('Reset progress?', 'Coins, levels, skins, boosters and streaks will be erased. This cannot be undone.', 'Reset', () => {
+      OP.save.reset();
+      if (OP.game) OP.game.clearCache();
+      toast('Progress reset');
+      m.close();
+      refresh('home');
+    });
+  }
+
+  function confirmBox(title, text, yes, onYes) {
+    const m = modal('<div class="panel small"><h2>' + esc(title) + '</h2><p>' + esc(text) + '</p>' +
+      '<div class="row2"><button class="btn" data-x="close">Cancel</button><button class="btn warn" id="cYes">' + esc(yes) + '</button></div></div>');
+    m.querySelector('#cYes').onclick = () => m.close(onYes);
+  }
+
+  function openPause(handlers) {
+    const m = modal('<div class="panel"><h2>Paused</h2>' +
+      '<button class="btn primary" data-x="close">' + ic('play') + 'Resume</button>' +
+      '<button class="btn" id="pRestart">Restart</button>' +
+      '<div class="toggles col">' + toggleRow('auto', 'Auto-highlight mistakes') + toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + '</div>' +
+      '<button class="btn" id="pHome">' + ic('home') + 'Home</button></div>', { onClose: handlers.onClose });
+    bindToggles(m);
+    m.querySelector('#pRestart').onclick = () => m.close(handlers.restart);
+    m.querySelector('#pHome').onclick = () => m.close(handlers.home);
+  }
+
+  // Login reward track: seven separate days, never resets.
+  function loginReward(r) {
+    if (r.coins) return { icon: ic('coin'), text: r.coins + ' coins' };
+    if (r.hint) return { icon: ic('hint'), text: r.hint + ' hints' };
+    if (r.skin) { const sk = OP.skins.get(r.skin); return { icon: '<img alt="" src="' + OP.skins.dataUri(sk.pa, 64) + '">', text: sk.name }; }
+    return { icon: '', text: '' };
+  }
+  function maybeLogin() {
+    const L = S().login, t = C.today();
+    if (L.day >= 7 || L.last === t.key) return false;
+    const m = modal('<div class="panel login"><h2>Daily reward</h2><p class="sub">Come back on 7 different days for every gift.</p><div class="days">' +
+      C.login.map((r, k) => {
+        const rw = loginReward(r), cls = k < L.day ? 'got' : (k === L.day ? 'now' : '');
+        return '<div class="day ' + cls + (k === 6 ? ' wide' : '') + '"><span class="dn">Day ' + (k + 1) + '</span><span class="di">' + rw.icon + '</span><span class="dt">' + esc(rw.text) + '</span>' + (k < L.day ? '<span class="ok">' + ic('tick') + '</span>' : '') + '</div>';
+      }).join('') + '</div><button class="btn primary big" id="lClaim">Claim</button></div>', { dismiss: false });
+    m.querySelector('#lClaim').onclick = () => {
+      const d = S(), r = C.login[d.login.day];
+      d.login.day++; d.login.last = t.key;
+      if (r.coins) d.coins += r.coins;
+      if (r.hint) d.boosters.hint += r.hint;
+      if (r.skin && d.owned.indexOf(r.skin) < 0) d.owned.push(r.skin);
+      OP.save.persist();
+      OP.audio.play('reward');
+      toast(loginReward(r).text + ' added!');
+      m.close();
+    };
+    return true;
+  }
+
+  // Booster refill: one rewarded ad grants 3 hints, 2 checks or 1 reveal.
+  function boosterAd(pre, allowReveal, done) {
+    const G = C.adGives;
+    const opts = [['hint', G.hint, 'hints'], ['check', G.check, 'checks']];
+    if (allowReveal) opts.push(['reveal', G.reveal, 'reveal']);
+    let pick = pre;
+    const m = modal('<div class="panel"><h2>Out of ' + (pre === 'reveal' ? 'reveals' : pre + 's') + '</h2><p class="sub">Watch a short ad and choose a reward.</p><div class="choices">' +
+      opts.map((o) => '<button class="choice' + (o[0] === pick ? ' on' : '') + '" data-k="' + o[0] + '">' + ic(o[0]) + '<b>+' + o[1] + '</b><span>' + o[2] + '</span></button>').join('') +
+      '</div><button class="btn primary big" id="bWatch">' + ic('ad') + '<span>Watch ad</span></button><button class="btn flat" data-x="close">No thanks</button></div>');
+    const paint = () => {
+      m.querySelectorAll('.choice').forEach((c) => c.classList.toggle('on', c.dataset.k === pick));
+      const o = opts.find((x) => x[0] === pick);
+      m.querySelector('#bWatch span').textContent = 'Watch ad for +' + o[1] + ' ' + o[2];
+    };
+    paint();
+    m.querySelector('.choices').onclick = (e) => { const c = e.target.closest('.choice'); if (c) { pick = c.dataset.k; OP.audio.play('click'); paint(); } };
+    m.querySelector('#bWatch').onclick = () => m.close(() => rewardedAd(() => {
+      S().boosters[pick] += G[pick];
+      OP.save.persist();
+      OP.audio.play('reward');
+      toast('+' + G[pick] + ' ' + opts.find((x) => x[0] === pick)[2]);
+      if (done) done();
+    }));
+  }
+
+  // ---------- placeholder ads ----------
+  let adOn = false;
+  function runAd(label, cb) {
+    if (adOn) return;
+    adOn = true;
+    OP.audio.duck(true);
+    if (OP.game) OP.game.adPause(true);
+    const ov = h('<div class="adov"><div class="adbox"><div class="adtag">AD</div><div class="adtxt"></div></div></div>');
+    document.body.appendChild(ov);
+    void ov.offsetWidth; ov.classList.add('on');
+    let n = C.adSeconds;
+    const txt = ov.querySelector('.adtxt');
+    const step = () => {
+      txt.textContent = label + ' in ' + n;
+      if (n === 0) {
+        S().lastAdAt = Date.now(); OP.save.persist();
+        ov.classList.remove('on');
+        setTimeout(() => { ov.remove(); adOn = false; OP.audio.duck(false); if (OP.game) OP.game.adPause(false); if (cb) cb(); }, 220);
+        return;
+      }
+      n--; setTimeout(step, 1000);
+    };
+    step();
+  }
+  function rewardedAd(cb) { runAd('Rewarded ad', cb); }
+  function adBreak(cb) {
+    if (Date.now() - S().lastAdAt < C.adCooldown) { cb(); return; }
+    runAd('Ad break', cb);
+  }
+
+  // ---------- win panel ----------
+  function openWin(o) {
+    let body = '';
+    if (o.mode === 'levels') {
+      body = '<div class="reward">' + ic('coin') + '<b id="wCoins">+' + o.coins + '</b></div>' +
+        (o.bonus ? '<div class="bonus">' + ic(o.bonus) + 'Bonus: +1 ' + o.bonus + '</div>' : '') +
+        '<button class="btn gold" id="wDouble">' + ic('ad') + 'Double coins</button>' +
+        '<div class="row2"><button class="btn" id="wHome">' + ic('home') + 'Home</button><button class="btn primary" id="wNext">Next' + '</button></div>';
+    } else if (o.mode === 'free') {
+      body = '<p class="sub">' + esc(o.label) + '</p><div class="row2"><button class="btn" id="wHome">' + ic('home') + 'Home</button><button class="btn primary" id="wNext">New puzzle</button></div>';
+    } else {
+      body = '<div class="stats"><div><span>Time</span><b>' + fmtTime(o.time) + '</b></div><div><span>Streak</span><b>' + flame() + o.streak + '</b></div></div>' +
+        '<button class="btn primary" id="wHome">' + ic('home') + 'Home</button>';
+    }
+    const m = modal('<div class="panel win"><h2 class="solved">Solved!</h2>' + body + '</div>', { dismiss: false, silent: true });
+    const nx = m.querySelector('#wNext'), hm = m.querySelector('#wHome'), db = m.querySelector('#wDouble');
+    if (nx) nx.onclick = () => m.close(o.next);
+    if (hm) hm.onclick = () => m.close(o.home);
+    if (db) db.onclick = () => {
+      db.disabled = true;
+      rewardedAd(() => {
+        S().coins += o.coins; OP.save.persist();
+        OP.audio.play('coin');
+        m.querySelector('#wCoins').textContent = '+' + o.coins * 2;
+        db.innerHTML = ic('tick') + 'Coins doubled';
+      });
+    };
+  }
+
+  // ---------- toast ----------
+  let toastEl = null, toastT = null;
+  function toast(text) {
+    if (!toastEl) { toastEl = h('<div class="toast"></div>'); document.body.appendChild(toastEl); }
+    toastEl.innerHTML = esc(text);
+    toastEl.classList.remove('on'); void toastEl.offsetWidth; toastEl.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('on'), 1800);
+  }
+
+  // Every button: tap sound (press scale is CSS).
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (b && !b.disabled && !b.closest('[data-x]') && b.dataset.x == null && !b.classList.contains('boost') && !b.classList.contains('card') && !b.classList.contains('choice')) OP.audio.play('click', 0.8);
+  }, true);
+  document.addEventListener('dblclick', (e) => e.preventDefault());
+
+  OP.ui = {
+    show, refresh, get current() { return current; },
+    msg, placeHud, setHud, setTimer, setBoosters, pointer,
+    modal, modalOpen, openSettings, openPause, openWin, maybeLogin, boosterAd,
+    rewardedAd, adBreak, toast, fmtTime, dailyState, logoHtml, esc,
+  };
+})();
