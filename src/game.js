@@ -301,8 +301,10 @@
         OP.ui.msg('Not quite — check the highlighted tiles', { tone: 'bad', ms: 1500, after: () => showStep() });
         return;
       }
-      const v = tut.target.v, kind = tut.target.kind;
-      applyPlacement(i, v, board[i]);
+      const before = board[i], after = before < 0 ? 0 : (before === 0 ? 1 : -1);
+      applyPlacement(i, after, before);
+      if (after !== tut.target.v) return; // same tap-to-cycle as everywhere else; keep tapping this tile
+      const kind = tut.target.kind;
       tut.steps++;
       if (isFull(board)) return;
       const doneReq = tut.requireKind && kind === tut.requireKind;
