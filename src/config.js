@@ -6,21 +6,21 @@
   const DIFFS = ['Easy', 'Medium', 'Hard', 'Expert'];
 
   // Levels 1-3: 4x4 tutorials. Level 1 introduces both starting rules at once; 3 adds frozen tiles.
-  // 11 and 31 introduce links and twin-rows the same way.
+  // 11 introduces links the same way. Rows/columns are always kept distinct by the generator
+  // itself (puzzle.js), so a "twin" row or column is simply never something a level needs to
+  // teach or test for.
   function levelSpec(L) {
     let s;
-    if (L === 1) s = { n: 4, diff: 1, links: false, unique: false, tut: 1 };
-    else if (L === 2) s = { n: 4, diff: 1, links: false, unique: false };
-    else if (L === 3) s = { n: 4, diff: 1, links: false, unique: false, tut: 3 };
-    else if (L <= 10) s = { n: 6, diff: 1, links: false, unique: false };
-    else if (L === 11) s = { n: 6, diff: 1, links: true, unique: false, tut: 11, require: 'link' };
-    else if (L <= 15) s = { n: 6, diff: 1, links: true, unique: false };
-    else if (L <= 20) s = { n: 6, diff: 2, links: true, unique: false };
-    else if (L === 21) s = { n: 8, diff: 1, links: true, unique: false };
-    else if (L <= 30) { const big = L % 2 === 0; s = { n: big ? 8 : 6, diff: big && L <= 25 ? 1 : 2, links: true, unique: false }; }
-    else if (L === 31) s = { n: 6, diff: 2, links: true, unique: true, tut: 31, require: 'twin' };
-    else if (L <= 40) { const big = L % 2 === 0; s = { n: big ? 8 : 6, diff: L <= 35 ? 2 : (L % 3 === 0 ? 2 : 3), links: true, unique: true }; }
-    else if (L === 41) s = { n: 10, diff: 1, links: true, unique: true };
+    if (L === 1) s = { n: 4, diff: 1, links: false, tut: 1 };
+    else if (L === 2) s = { n: 4, diff: 1, links: false };
+    else if (L === 3) s = { n: 4, diff: 1, links: false, tut: 3 };
+    else if (L <= 10) s = { n: 6, diff: 1, links: false };
+    else if (L === 11) s = { n: 6, diff: 1, links: true, tut: 11, require: 'link' };
+    else if (L <= 15) s = { n: 6, diff: 1, links: true };
+    else if (L <= 20) s = { n: 6, diff: 2, links: true };
+    else if (L === 21) s = { n: 8, diff: 1, links: true };
+    else if (L <= 40) { const big = L % 2 === 0; s = { n: big ? 8 : 6, diff: L <= 25 ? (big ? 1 : 2) : (L <= 35 ? 2 : (L % 3 === 0 ? 2 : 3)), links: true }; }
+    else if (L === 41) s = { n: 10, diff: 1, links: true };
     else {
       const n = [6, 8, 10][(L - 42) % 3];
       let d;
@@ -29,10 +29,10 @@
       else if (L < 130) d = 3;
       else if (L < 200) d = L % 3 === 0 ? 4 : 3;
       else d = L % 2 ? 4 : 3;
-      s = { n, diff: d, links: true, unique: true };
+      s = { n, diff: d, links: true };
     }
     // Every 5th level is one step easier, except levels that introduce something new.
-    if (L > 5 && L % 5 === 1 && [11, 21, 31, 41].indexOf(L) < 0) s.diff = Math.max(1, s.diff - 1);
+    if (L > 5 && L % 5 === 1 && [11, 21, 41].indexOf(L) < 0) s.diff = Math.max(1, s.diff - 1);
     s.seed = 'level-' + L;
     return s;
   }
@@ -60,13 +60,13 @@
   }
   function dailySpec(t) {
     const r = DAILY[t.wd];
-    return { n: r.n, diff: r.diff, links: true, unique: true, seed: 'daily-' + t.key };
+    return { n: r.n, diff: r.diff, links: true, seed: 'daily-' + t.key };
   }
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.58',
+    VERSION: '0.1.68',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)

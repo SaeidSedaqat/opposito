@@ -1,7 +1,7 @@
 /* Opposito puzzle engine: seeded generator, logic-only solver, difficulty rater.
    Runs both on the main thread (hints, checks) and inside a Web Worker (generation).
    Cell values: -1 empty, 0 = piece A (Fire), 1 = piece B (Ice).
-   Tiers: 1 Easy (pairs, sandwiches, counts, links), 2 Medium (whole-line reasoning, twin rows),
+   Tiers: 1 Easy (pairs, sandwiches, counts, links), 2 Medium (whole-line reasoning),
           3 Hard (one-step "what if" with basic rules), 4 Expert ("what if" with line reasoning). */
 (function (root) {
   'use strict';
@@ -40,7 +40,7 @@
 
   // ---------- puzzle context ----------
   // Lines 0..n-1 are rows, n..2n-1 are columns.
-  function ctx(n, links, unique) {
+  function ctx(n, links) {
     const lc = [];
     for (let r = 0; r < n; r++) { const a = []; for (let k = 0; k < n; k++) a.push(r * n + k); lc.push(a); }
     for (let c = 0; c < n; c++) { const a = []; for (let k = 0; k < n; k++) a.push(k * n + c); lc.push(a); }
@@ -49,28 +49,13 @@
       const ra = (a / n) | 0, rb = (b / n) | 0, ca = a % n, cb = b % n;
       if (ra === rb) inLine[ra].push([ca, cb]); else inLine[n + ca].push([ra, rb]);
     }
-    return { n, h: n / 2, full: (1 << n) - 1, links: links.slice(), unique: !!unique, lc, inLine, pats: patterns(n) };
+    return { n, h: n / 2, full: (1 << n) - 1, links: links.slice(), lc, inLine, pats: patterns(n) };
   }
 
   function lineKV(g, cells) {
     let K = 0, V = 0;
     for (let k = 0; k < cells.length; k++) { const v = g[cells[k]]; if (v >= 0) { K |= 1 << k; if (v) V |= 1 << k; } }
     return [K, V];
-  }
-
-  // Duplicate complete rows / columns (only when the "no twin rows" rule is on).
-  function twinClash(g, P) {
-    if (!P.unique) return false;
-    for (let o = 0; o < 2; o++) {
-      const seen = new Set();
-      for (let l = 0; l < P.n; l++) {
-        const [K, V] = lineKV(g, P.lc[o * P.n + l]);
-        if (K !== P.full) continue;
-        if (seen.has(V)) return true;
-        seen.add(V);
-      }
-    }
-    return false;
   }
 
   // ---------- Tier 1: basic rules ----------
@@ -112,11 +97,11 @@
     for (;;) {
       const r = t1(g, P, 'apply', stats);
       if (r < 0) return false;
-      if (!r) return !twinClash(g, P);
+      if (!r) return true;
     }
   }
 
-  // ---------- Tier 2: whole-line reasoning (+ no twin rows) ----------
+  // ---------- Tier 2: whole-line reasoning ----------
   function t2(g, P, mode, stats) {
     const list = mode === 'list' ? [] : null;
     let changed = 0;
@@ -126,20 +111,12 @@
       const [K, V] = lineKV(g, c);
       if (K === full) continue;
       const il = P.inLine[L];
-      let and = full, or = 0, cnt = 0, andNT = full, orNT = 0, cntNT = 0;
-      let done = null;
-      if (P.unique) {
-        done = new Set();
-        const base = L < n ? 0 : n;
-        for (let l = 0; l < n; l++) { const [k2, v2] = lineKV(g, P.lc[base + l]); if (k2 === full) done.add(v2); }
-      }
+      let and = full, or = 0, cnt = 0;
       for (const p of P.pats) {
         if ((p & K) !== V) continue;
         let ok = true;
         for (let q = 0; q < il.length; q++) if ((((p >> il[q][0]) ^ (p >> il[q][1])) & 1) === 0) { ok = false; break; }
         if (!ok) continue;
-        andNT &= p; orNT |= p; cntNT++;
-        if (done && done.has(p)) continue;
         and &= p; or |= p; cnt++;
       }
       if (!cnt) return list ? null : -1;
@@ -149,9 +126,8 @@
         const bit = 1 << k;
         if (!((f1 | f0) & bit)) continue;
         const v = (f1 & bit) ? 1 : 0;
-        const viaTwin = !(cntNT && (v ? (andNT & bit) : !(orNT & bit)));
-        if (list) list.push({ kind: viaTwin ? 'twin' : 'line', i: c[k], v, line: L, tier: 2 });
-        else if (g[c[k]] < 0) { g[c[k]] = v; changed = 1; if (viaTwin && stats) stats.twin = true; }
+        if (list) list.push({ kind: 'line', i: c[k], v, line: L, tier: 2 });
+        else if (g[c[k]] < 0) { g[c[k]] = v; changed = 1; }
       }
       if (list && list.length) return list; // one line at a time is plenty for hints
     }
@@ -189,7 +165,7 @@
 
   // Logic-only solve. Returns { ok, tier, g, stats }.
   function solve(P, g0, sol, maxTier) {
-    const g = Int8Array.from(g0), stats = { link: false, twin: false };
+    const g = Int8Array.from(g0), stats = { link: false };
     let tier = 1;
     for (;;) {
       if (!propagate1(g, P, stats)) return { ok: false, tier, g, stats };
@@ -202,14 +178,15 @@
   }
 
   // ---------- full solution ----------
-  function genSolution(n, unique, rnd) {
+  // Rows and columns are always kept distinct from each other: not a rule the player has to
+  // reason about, just how every solution is built, so a "twin" row or column never comes up.
+  function genSolution(n, rnd) {
     const pats = patterns(n), h = n / 2, full = (1 << n) - 1;
     for (let restart = 0; restart < 200; restart++) {
       const rows = [], ones = new Array(n).fill(0);
       let budget = 4000;
       const rec = (r) => {
         if (r === n) {
-          if (!unique) return true;
           const cols = new Set();
           for (let c = 0; c < n; c++) { let v = 0; for (let k = 0; k < n; k++) if ((rows[k] >> c) & 1) v |= 1 << k; if (cols.has(v)) return false; cols.add(v); }
           return true;
@@ -217,7 +194,7 @@
         if (--budget < 0) return false;
         const order = shuffle(pats.slice(), rnd), left = n - 1 - r;
         for (const p of order) {
-          if (unique && rows.indexOf(p) >= 0) continue;
+          if (rows.indexOf(p) >= 0) continue;
           if (r >= 2) {
             const a = rows[r - 1], b = rows[r - 2];
             if (a & b & p) continue;
@@ -269,15 +246,15 @@
 
   const LINK_DENSITY = 0.12;
 
-  // opts: { n, diff (1..4), links, unique, seed, require: 'link'|'twin', attempts }
+  // opts: { n, diff (1..4), links, seed, require: 'link', attempts }
   function generate(opts) {
     const n = opts.n, target = opts.diff, maxAttempts = opts.attempts || [0, 30, 30, 40, 80][target];
     let best = null;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const rnd = mulberry32(hashStr(opts.seed + '#' + attempt));
-      const sol = genSolution(n, opts.unique, rnd);
+      const sol = genSolution(n, rnd);
       const links = opts.links ? pickLinks(n, sol, rnd, Math.max(2, Math.round(n * n * LINK_DENSITY))) : [];
-      const P = ctx(n, links, opts.unique);
+      const P = ctx(n, links);
       const g = Int8Array.from(sol);
       const order = shuffle([...Array(n * n).keys()], rnd);
       // Pass 1 with the cheap tier, pass 2 with the target tier.
@@ -290,13 +267,12 @@
       }
       // Drop links that join two given cells: they tell the player nothing.
       const keep = links.filter(([a, b]) => g[a] < 0 || g[b] < 0);
-      const P2 = ctx(n, keep, opts.unique);
+      const P2 = ctx(n, keep);
       const res = solve(P2, g, sol, 4);
       if (!res.ok) continue;
       let fits = true;
-      if (opts.require === 'link') fits = !solve(ctx(n, [], opts.unique), g, sol, 4).ok;
-      if (opts.require === 'twin') fits = !solve(ctx(n, keep, false), g, sol, 4).ok;
-      const out = { n, sol: Array.from(sol), givens: Array.from(g), links: keep, unique: !!opts.unique, rating: res.tier, diff: target, seed: opts.seed, attempt };
+      if (opts.require === 'link') fits = !solve(ctx(n, []), g, sol, 4).ok;
+      const out = { n, sol: Array.from(sol), givens: Array.from(g), links: keep, rating: res.tier, diff: target, seed: opts.seed, attempt };
       if (!fits) continue;
       if (res.tier === target) return out;
       if (!best || Math.abs(res.tier - target) < Math.abs(best.rating - target) ||
@@ -308,7 +284,7 @@
   }
 
   // ---------- player-facing helpers (main thread) ----------
-  function ctxOf(pz) { return ctx(pz.n, pz.links, pz.unique); }
+  function ctxOf(pz) { return ctx(pz.n, pz.links); }
 
   // Next logical step from the player's board (assumed to have no wrong cells).
   // prefer: optional deduction kind to favour (tutorials).
@@ -349,17 +325,6 @@
       for (let p = 0; p < 2; p++) if (cnt[p] > P.h) { for (let k = 0; k < n; k++) if (g[c[k]] === p) cells.add(c[k]); lines.add(L); }
     }
     for (const [a, b] of P.links) if (g[a] >= 0 && g[a] === g[b]) { cells.add(a); cells.add(b); }
-    if (P.unique) {
-      for (let o = 0; o < 2; o++) {
-        const seen = {};
-        for (let l = 0; l < n; l++) {
-          const L = o * n + l, [K, V] = lineKV(g, P.lc[L]);
-          if (K !== P.full) continue;
-          if (seen[V] != null) { for (const x of [seen[V], L]) { lines.add(x); P.lc[x].forEach((i) => cells.add(i)); } }
-          else seen[V] = L;
-        }
-      }
-    }
     return { cells, lines };
   }
 

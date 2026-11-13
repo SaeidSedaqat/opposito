@@ -15,7 +15,7 @@
   let prevGood = [];
   const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [] };
   // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
-  const TUT_HELP = { 1: ['three', 'balance'], 11: ['links'], 31: ['twins'] };
+  const TUT_HELP = { 1: ['three', 'balance'], 11: ['links'] };
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -78,7 +78,6 @@
       case 'pair': return 'Two ' + nameOf(step.p) + ' in a row already. ' + place + ', or three would match.';
       case 'sand': return nameOf(step.p) + ' on both sides of the gap. ' + place + ' to fill it in.';
       case 'count': return 'This line already has enough ' + nameOf(step.p) + '. ' + place + ' to balance it out.';
-      case 'twin': return 'Two rows or columns would end up identical. ' + place + ' so they stay different.';
       case 'line': return 'Look at the whole line, not just one pair. ' + place + ' — it’s the only piece that fits.';
       case 'trial': return 'Not obvious yet — ' + place.toLowerCase() + ' and see what it unlocks.';
       default: return place + '.';
@@ -88,7 +87,7 @@
   function evidenceFor(step) {
     if (step.from && step.from.length) return step.from.slice();
     if (step.line != null) {
-      const P = OP.Puzzle.ctx(pz.n, pz.links, pz.unique);
+      const P = OP.Puzzle.ctx(pz.n, pz.links);
       if (step.kind === 'count') return P.lc[step.line].filter((ci) => board[ci] === step.p);
       return P.lc[step.line].filter((ci) => ci !== step.i);
     }
@@ -105,7 +104,7 @@
   // ---------- spec builders ----------
   function buildSpec(which) {
     if (which === 'levels') { const L = S().level; const s = C.levelSpec(L); s.level = L; return s; }
-    if (which === 'free') { const f = S().free; const count = f.count || 0; return { n: f.n, diff: f.diff, links: f.links, unique: f.twin, seed: 'free-' + count }; }
+    if (which === 'free') { const f = S().free; const count = f.count || 0; return { n: f.n, diff: f.diff, links: f.links, seed: 'free-' + count }; }
     const t = C.today(); const s = C.dailySpec(t); s.key = t.key; return s;
   }
 
@@ -309,7 +308,7 @@
   // empties/wrong cells). No charge if that line is already fully correct.
   function doReveal(i) {
     const n = pz.n, r = (i / n) | 0, c = i % n, rowL = r, colL = n + c;
-    const P = OP.Puzzle.ctx(n, pz.links, pz.unique);
+    const P = OP.Puzzle.ctx(n, pz.links);
     const scoreLine = (L) => { let s = 0; P.lc[L].forEach((ci) => { if (board[ci] < 0) s++; else if (board[ci] !== pz.sol[ci]) s++; }); return s; };
     const rs = scoreLine(rowL), cs2 = scoreLine(colL);
     if (rs === 0 && cs2 === 0) { OP.ui.msg('That line is already done', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
@@ -517,7 +516,7 @@
         this.gFx.lineStyle(2 * dpr, 0x3fa4e8, 0.6); this.gFx.strokeRoundedRect.apply(this.gFx, r.concat([6 * dpr]));
       });
       let P2 = null;
-      if ((fx.glowLines || []).length) P2 = OP.Puzzle.ctx(n, pz.links, pz.unique);
+      if ((fx.glowLines || []).length) P2 = OP.Puzzle.ctx(n, pz.links);
       (fx.glowLines || []).forEach((L2) => { P2.lc[L2].forEach((i) => { this.gFx.lineStyle(3 * dpr, 0xffd27a, 0.95); this.gFx.strokeRoundedRect.apply(this.gFx, rectFor(i).concat([6 * dpr])); }); });
       (fx.broken || []).forEach((i) => { this.gFx.lineStyle(3 * dpr, 0xff5050, 0.85); this.gFx.strokeRoundedRect.apply(this.gFx, rectFor(i).concat([6 * dpr])); });
       (fx.bad || []).forEach((i) => { this.gFx.fillStyle(0xff5050, 0.3); this.gFx.fillRoundedRect.apply(this.gFx, rectFor(i).concat([6 * dpr])); });
