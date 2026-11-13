@@ -530,8 +530,15 @@
       this.tweens.add({ targets: cont.pieceImg, scaleX: target, scaleY: target, duration: 220, ease: 'Back.easeOut' });
     }
     shakeCell(i) {
-      const cont = this.cellC[i]; if (!cont) return;
-      const x0 = cont.x;
+      const cont = this.cellC[i]; if (!cont || !pz || !this.L) return;
+      // Spamming taps could otherwise stack shakes: each new one read cont.x mid-animation as
+      // its "resting" position, so the cell drifted further off-grid with every extra tap.
+      // Kill any shake already in flight and recompute the true resting x from the board
+      // geometry (never from cont.x, which may currently be mid-tween) before starting a new one.
+      this.tweens.killTweensOf(cont);
+      const n = pz.n, r = (i / n) | 0, c = i % n, g = this.geom();
+      const x0 = g.ox + g.P + c * g.CS + g.CS / 2;
+      cont.x = x0;
       this.tweens.add({ targets: cont, x: [x0 - 6 * this.dpr, x0 + 6 * this.dpr, x0 - 4 * this.dpr, x0 + 4 * this.dpr, x0], duration: 260, ease: 'Sine.easeInOut' });
       OP.audio.play('wrong', 0.5);
     }
