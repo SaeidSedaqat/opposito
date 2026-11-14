@@ -378,6 +378,8 @@
 
   // Settings and pause menu: Sound, Music (and in Settings, mistake highlighting) are buttons, not
   // switches. One tap flips the setting; the icon and label show its state, greyed out when off.
+  // Round red close button (generated art) used by Settings and How to Play.
+  const XBTN = '<button class="xclose" data-x="close" aria-label="Close"><img alt="" draggable="false" src="assets/art/ui/x-red.webp?v=' + OP.config.VERSION + '"></button>';
   const SET_BTN = { sound: 'Sound', music: 'Music' };
   // Icon-only orange buttons (pause menu and Settings): home footer shape, 30% smaller.
   function icb(id, art, label) { return '<button class="btn primary icb" id="' + id + '" aria-label="' + label + '">' + ic(art) + '</button>'; }
@@ -398,7 +400,7 @@
   }
 
   function openSettings() {
-    const m = modal('<div class="panel"><button class="xclose" data-x="close" aria-label="Close">' + ICON.cross + '</button><h2>Settings</h2>' +
+    const m = modal('<div class="panel menu">' + XBTN + '<h2>Settings</h2>' +
       '<div class="icgrid">' + setBtn('sound') + setBtn('music') +
       icb('mHelp', 'help-white', 'How to play') + icb('mReset', 'restart-white', 'Reset progress') + '</div>' +
       '<div class="credit">Created by SaeidGD</div></div>');
@@ -420,7 +422,7 @@
   }
 
   function openPause(handlers) {
-    const m = modal('<div class="panel small"><h2>Pause</h2><div class="icgrid">' +
+    const m = modal('<div class="panel menu"><h2>Pause</h2><div class="icgrid">' +
       '<button class="btn primary icb wide" data-x="close" aria-label="Resume">' + ic('play-white') + '</button>' +
       icb('pRestart', 'restart-white', 'Restart') + icb('pShop', 'bag-white', 'Shop') +
       setBtn('sound') + setBtn('music') +
@@ -479,8 +481,8 @@
     const keys = only && only.length ? only : ['balance', 'three', 'links'].concat(all || S().level >= 16 ? ['bonds'] : []);
     const body = keys.map((k) => sections[k] ? sections[k]() : '').join('');
     const sub = only && only.length && only.indexOf('balance') < 0 ? 'New rule for this level:' : 'Fill every tile so all the rules below hold at once.';
-    modal('<div class="panel help"><h2>How to Play</h2><p class="sub">' + sub + '</p>' +
-      body + '<button class="btn primary" data-x="close">Got it</button></div>', { onClose: onClose });
+    modal('<div class="panel help">' + XBTN + '<h2>How to Play</h2><p class="sub">' + sub + '</p>' +
+      body + '</div>', { onClose: onClose });
   }
 
   // Login reward track: seven separate days, never resets.
