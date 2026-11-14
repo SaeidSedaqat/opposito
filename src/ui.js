@@ -218,14 +218,16 @@
     const pause = game.querySelector('#gPause'), lab = game.querySelector('#gLabel'), tim = game.querySelector('#gTimer'), bar = game.querySelector('#gBar');
     const sx = L.safe;
     pause.style.left = sx.l + 12 + 'px'; pause.style.top = sx.t + 10 + 'px';
-    tim.style.right = sx.r + 12 + 'px'; tim.style.top = sx.t + 14 + 'px';
+    tim.style.right = sx.r + 12 + 'px'; tim.style.left = 'auto'; tim.style.top = sx.t + 14 + 'px';
     if (L.compact) {
+      // The board fills the right side here, so the timer sits beside the pause button instead.
+      tim.style.left = sx.l + 12 + 75 + 12 + 'px'; tim.style.right = 'auto'; tim.style.top = sx.t + 30 + 'px';
       const colW = Math.max(120, L.x - sx.l - 24);
       lab.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 94) + 'px;width:' + colW + 'px;transform:none;text-align:left;align-items:flex-start';
-      msgEl.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 154) + 'px;width:' + colW + 'px;transform:none;justify-content:flex-start;text-align:left;height:auto;min-height:40px';
+      msgEl.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 166) + 'px;width:' + colW + 'px;transform:none;justify-content:flex-start;text-align:left;height:auto;min-height:40px';
     } else {
       lab.style.cssText = 'left:50%;top:' + (sx.t + 8) + 'px;transform:translateX(-50%);width:' + Math.max(120, L.W - 2 * 96) + 'px';
-      msgEl.style.cssText = 'left:50%;top:' + (sx.t + 62) + 'px;transform:translateX(-50%);width:' + Math.min(L.W - 24, 560) + 'px';
+      msgEl.style.cssText = 'left:50%;top:' + (sx.t + 74) + 'px;transform:translateX(-50%);width:' + Math.min(L.W - 24, 560) + 'px';
     }
     const bw = Math.min(Math.max(L.size, 280), 440, L.W - 16);
     bar.style.left = (L.x + L.size / 2 - bw / 2) + 'px';

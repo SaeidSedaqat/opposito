@@ -57,7 +57,7 @@
       x = w - size - 20;
       y = Math.max(12, (h - size - 12 - bar) / 2);
     } else {
-      const top = 60, msgH = 40;
+      const top = 72, msgH = 40; // room for the level label (50% bigger since 0.1.178)
       size = clamp(Math.min(w - 32, h - top - msgH - bar - 24), 160, 620);
       x = (w - size) / 2;
       const blockH = size + 12 + bar;
@@ -65,9 +65,18 @@
     }
     return { W: w, H: h, x, y, size, compact, safe: { l: 16, t: 16, r: 16 } };
   }
+  // Big screens: lay the game out as if the window were a normal-sized one (w/g x h/g), then scale
+  // everything up by g -- the HUD through CSS zoom (--g), the board by multiplying its rect --
+  // so a 3200x1920 window looks like a 1280x800 one, only larger. Never shrinks (g >= 1).
+  function hudScale(w, h) {
+    return h > w ? Math.max(1, Math.min(w / 600, h / 1000)) : Math.max(1, Math.min(w / 1280, h / 800));
+  }
   function layout(w, h) {
-    curL = computeLayout(w, h);
-    OP.ui.placeHud(curL);
+    const g = hudScale(w, h);
+    document.documentElement.style.setProperty('--g', g.toFixed(4));
+    const v = computeLayout(w / g, h / g);
+    OP.ui.placeHud(v);
+    curL = Object.assign({}, v, { W: w, H: h, x: v.x * g, y: v.y * g, size: v.size * g, g });
     if (scene) scene.setLayout(curL);
   }
 
@@ -145,7 +154,7 @@
     const labels = {
       levels: ['Level ' + spec.level, C.DIFFS[spec.diff - 1] + ' · ' + spec.n + '×' + spec.n],
       free: ['Free Play', C.DIFFS[spec.diff - 1] + ' · ' + spec.n + '×' + spec.n],
-      daily: ['Daily', C.dateLabel(C.today())],
+      daily: ['Daily', C.dateLabel(C.today()).replace(/^(\w{3})\w*/, '$1')], // "Nov 14, 2026": fits beside pause/timer on phones
     }[which];
     OP.ui.setHud({ l1: labels[0], l2: labels[1], timer: which === 'daily', bar: true, gen: false });
     if (which === 'daily') { OP.ui.setTimer(elapsed); startDailyTimer(); } else stopDailyTimer();
