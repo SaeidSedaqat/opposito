@@ -140,7 +140,7 @@
     let t;
     if (st.v === 0) t = 'Each row needs as many ' + A + ' as ' + B + '.<br>Tap here to place ' + A + '!';
     else if (board[st.i] === 0) t = 'Tap again to turn it into ' + B + '.';
-    else t = (st.line < pz.n ? 'This row needs one more ' : 'Columns too! This one needs ') + B + '.<br>Tap twice: ' + A + ', then ' + B + '.';
+    else t = (st.line < pz.n ? 'This row needs one more ' : 'Columns too! This one needs ') + B + '.<br>Double tap to get ' + B + '.';
     OP.ui.msg(t, { tone: 'tut' });
     pointAtCell(st.i);
   }

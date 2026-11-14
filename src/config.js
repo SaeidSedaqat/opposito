@@ -8,13 +8,13 @@
   // Hand-made boards: 0 = Fire, 1 = Ice, -1 = empty.
   const I = 1, F = 0, E = -1;
   const FIXED = {
-    1: { n: 4, links: [], givens: [I, F, F, E, F, I, I, F, I, F, F, I, E, I, I, F],
+    1: { n: 4, links: [], givens: [E, F, F, I, F, I, I, F, I, F, F, I, E, I, I, F],
       sol: [I, F, F, I, F, I, I, F, I, F, F, I, F, I, I, F] },
     2: { n: 4, links: [], givens: [I, F, I, E, E, I, F, I, F, F, I, I, E, I, F, E],
       sol: [I, F, I, F, F, I, F, I, F, F, I, I, I, I, F, F] },
   };
   // Level 1 steps, in order: the one cell the player may tap, the piece it needs, and the row or column to spotlight.
-  const GUIDE1 = [{ i: 12, v: F, line: 3 }, { i: 3, v: I, line: 7 }]; // lines: 0-3 rows, 4-7 columns
+  const GUIDE1 = [{ i: 12, v: F, line: 3 }, { i: 0, v: I, line: 4 }]; // lines: 0-3 rows, 4-7 columns
 
   // Levels 1-5 are 4x4. Level 1 is a hand-made guided tutorial (one allowed tap per step, see
   // game.js), 2 is hand-made with no help, 3 is an extra-easy generated board (extra = givens put
@@ -47,7 +47,7 @@
     }
     // Every 5th level is one step easier, except levels that introduce something new.
     if (L > 5 && L % 5 === 1 && [11, 21, 41].indexOf(L) < 0) s.diff = Math.max(1, s.diff - 1);
-    s.seed = 'level-' + L + (L <= 6 ? 'b' : ''); // 'b': levels 1-6 were redesigned in 0.1.189
+    s.seed = 'level-' + L + (L === 1 ? 'c' : L <= 6 ? 'b' : ''); // b: levels 1-6 redesigned in 0.1.189; c: level 1 board changed in 0.1.201
     return s;
   }
 
@@ -80,7 +80,7 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.200',
+    VERSION: '0.1.201',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)
