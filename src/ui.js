@@ -93,8 +93,13 @@
     const ds = dailyState();
     const b = home.querySelector('#hDaily');
     b.disabled = !!ds.solved;
-    home.querySelector('#hDailyS').innerHTML = flame() + ds.streak + ' day streak' +
-      (ds.solved ? ' · solved in ' + fmtTime(ds.solved.time) : '');
+    // The streak line only appears once there is a real streak (2+ days); a solved Daily still shows its time.
+    const parts = [];
+    if (ds.streak >= 2) parts.push(flame() + ds.streak + ' day streak');
+    if (ds.solved) parts.push('Solved in ' + fmtTime(ds.solved.time));
+    const sEl = home.querySelector('#hDailyS');
+    sEl.innerHTML = parts.join(' · ');
+    sEl.hidden = !parts.length;
   };
   home.querySelector('#hSet').onclick = () => openSettings();
   home.querySelector('#hShop').onclick = () => show('shop');
