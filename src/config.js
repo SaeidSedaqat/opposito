@@ -31,6 +31,7 @@
     else if (L <= 10) s = { n: 6, diff: 1, links: false, extra: [9, 7, 6, 5, 4][L - 6] }; // first 6x6 boards start with extra givens, easing off each level
     else if (L === 11) s = { n: 6, diff: 1, links: true, tut: 11, require: 'link' };
     else if (L <= 15) s = { n: 6, diff: 1, links: true };
+    else if (L === 16) s = { n: 6, diff: 1, links: true, tut: 16, require: 'bond' }; // introduces bonds (same-piece links)
     else if (L <= 20) s = { n: 6, diff: 2, links: true };
     else if (L === 21) s = { n: 8, diff: 1, links: true };
     else if (L <= 40) { const big = L % 2 === 0; s = { n: big ? 8 : 6, diff: L <= 25 ? (big ? 1 : 2) : (L <= 35 ? 2 : (L % 3 === 0 ? 2 : 3)), links: true }; }
@@ -45,6 +46,7 @@
       else d = L % 2 ? 4 : 3;
       s = { n, diff: d, links: true };
     }
+    if (L >= 16 && s.links) s.bonds = true;
     // Every 5th level is one step easier, except levels that introduce something new.
     if (L > 5 && L % 5 === 1 && [11, 21, 41].indexOf(L) < 0) s.diff = Math.max(1, s.diff - 1);
     s.seed = 'level-' + L + (L === 1 ? 'c' : L <= 6 ? 'b' : ''); // b: levels 1-6 redesigned in 0.1.189; c: level 1 board changed in 0.1.201
@@ -74,13 +76,13 @@
   }
   function dailySpec(t) {
     const r = DAILY[t.wd];
-    return { n: r.n, diff: r.diff, links: true, seed: 'daily-' + t.key };
+    return { n: r.n, diff: r.diff, links: true, bonds: true, seed: 'daily-' + t.key };
   }
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.217',
+    VERSION: '0.1.227',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)

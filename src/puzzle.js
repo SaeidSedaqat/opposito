@@ -45,9 +45,10 @@
     for (let r = 0; r < n; r++) { const a = []; for (let k = 0; k < n; k++) a.push(r * n + k); lc.push(a); }
     for (let c = 0; c < n; c++) { const a = []; for (let k = 0; k < n; k++) a.push(k * n + c); lc.push(a); }
     const inLine = lc.map(() => []);
-    for (const [a, b] of links) {
-      const ra = (a / n) | 0, rb = (b / n) | 0, ca = a % n, cb = b % n;
-      if (ra === rb) inLine[ra].push([ca, cb]); else inLine[n + ca].push([ra, rb]);
+    // A link is [a, b] (melt: opposite pieces) or [a, b, 1] (bond: the same piece).
+    for (const [a, b, s] of links) {
+      const ra = (a / n) | 0, rb = (b / n) | 0, ca = a % n, cb = b % n, d = s ? 0 : 1; // d: required xor of the two cells
+      if (ra === rb) inLine[ra].push([ca, cb, d]); else inLine[n + ca].push([ra, rb, d]);
     }
     return { n, h: n / 2, full: (1 << n) - 1, links: links.slice(), lc, inLine, pats: patterns(n) };
   }
@@ -66,13 +67,13 @@
     let changed = 0;
     const put = (i, v, d) => {
       if (list) { d.i = i; d.v = v; d.tier = 1; list.push(d); return; }
-      if (g[i] < 0) { g[i] = v; changed = 1; if (stats && d.kind === 'link') stats.link = true; }
+      if (g[i] < 0) { g[i] = v; changed = 1; if (stats && d.kind === 'link') stats.link = true; if (stats && d.kind === 'bond') stats.bond = true; }
     };
-    for (const [a, b] of P.links) {
-      const va = g[a], vb = g[b];
-      if (va >= 0 && vb >= 0) { if (va === vb) return list ? null : -1; }
-      else if (va >= 0) put(b, 1 - va, { kind: 'link', from: [a] });
-      else if (vb >= 0) put(a, 1 - vb, { kind: 'link', from: [b] });
+    for (const [a, b, s] of P.links) {
+      const va = g[a], vb = g[b], kind = s ? 'bond' : 'link';
+      if (va >= 0 && vb >= 0) { if ((va === vb) !== !!s) return list ? null : -1; }
+      else if (va >= 0) put(b, s ? va : 1 - va, { kind, from: [a] });
+      else if (vb >= 0) put(a, s ? vb : 1 - vb, { kind, from: [b] });
     }
     const n = P.n, h = P.h;
     for (let L = 0; L < 2 * n; L++) {
@@ -115,7 +116,7 @@
       for (const p of P.pats) {
         if ((p & K) !== V) continue;
         let ok = true;
-        for (let q = 0; q < il.length; q++) if ((((p >> il[q][0]) ^ (p >> il[q][1])) & 1) === 0) { ok = false; break; }
+        for (let q = 0; q < il.length; q++) if ((((p >> il[q][0]) ^ (p >> il[q][1])) & 1) !== il[q][2]) { ok = false; break; }
         if (!ok) continue;
         and &= p; or |= p; cnt++;
       }
@@ -223,14 +224,25 @@
   }
 
   // Sparse, spread-out melt links between opposite neighbours.
-  function pickLinks(n, sol, rnd, count) {
-    const pairs = [];
+  // bondShare (0..1): about that share of the links are bonds (two neighbours that are the same).
+  function pickLinks(n, sol, rnd, count, bondShare) {
+    const pairs = [], bonds = [];
     for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
       const i = r * n + c;
-      if (c + 1 < n && sol[i] !== sol[i + 1]) pairs.push([i, i + 1]);
-      if (r + 1 < n && sol[i] !== sol[i + n]) pairs.push([i, i + n]);
+      if (c + 1 < n) (sol[i] !== sol[i + 1] ? pairs : bonds).push(sol[i] !== sol[i + 1] ? [i, i + 1] : [i, i + 1, 1]);
+      if (r + 1 < n) (sol[i] !== sol[i + n] ? pairs : bonds).push(sol[i] !== sol[i + n] ? [i, i + n] : [i, i + n, 1]);
     }
     shuffle(pairs, rnd);
+    if (bondShare > 0) {
+      // Interleave so the first `count` candidates hold roughly bondShare bonds.
+      shuffle(bonds, rnd);
+      const mixed = []; let acc = 0;
+      while (pairs.length || bonds.length) {
+        acc += bondShare;
+        if (bonds.length && (acc >= 1 || !pairs.length)) { mixed.push(bonds.shift()); acc -= 1; } else mixed.push(pairs.shift());
+      }
+      pairs.length = 0; pairs.push(...mixed);
+    }
     const used = new Set(), out = [];
     const near = (i) => { const r = (i / n) | 0, c = i % n; return [i, r > 0 ? i - n : -1, r < n - 1 ? i + n : -1, c > 0 ? i - 1 : -1, c < n - 1 ? i + 1 : -1]; };
     for (const pass of [true, false]) {
@@ -253,7 +265,7 @@
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       const rnd = mulberry32(hashStr(opts.seed + '#' + attempt));
       const sol = genSolution(n, rnd);
-      const links = opts.links ? pickLinks(n, sol, rnd, Math.max(2, Math.round(n * n * LINK_DENSITY))) : [];
+      const links = opts.links ? pickLinks(n, sol, rnd, Math.max(2, Math.round(n * n * LINK_DENSITY)), opts.bonds ? (opts.require === 'bond' ? 0.75 : 0.4) : 0) : [];
       const P = ctx(n, links);
       const g = Int8Array.from(sol);
       const order = shuffle([...Array(n * n).keys()], rnd);
@@ -274,6 +286,7 @@
       if (!res.ok) continue;
       let fits = true;
       if (opts.require === 'link') fits = !solve(ctx(n, []), g, sol, 4).ok;
+      if (opts.require === 'bond') fits = keep.some((l) => l[2]) && !solve(ctx(n, keep.filter((l) => !l[2])), g, sol, 4).ok;
       const out = { n, sol: Array.from(sol), givens: Array.from(g), links: keep, rating: res.tier, diff: target, seed: opts.seed, attempt };
       if (!fits) continue;
       if (res.tier === target) return out;
@@ -327,7 +340,7 @@
       // Too many of one piece: mark the player's pieces only, never the frozen givens (they are right).
       for (let p = 0; p < 2; p++) if (cnt[p] > P.h) { for (let k = 0; k < n; k++) if (g[c[k]] === p && !(pz.givens && pz.givens[c[k]] >= 0)) cells.add(c[k]); lines.add(L); }
     }
-    for (const [a, b] of P.links) if (g[a] >= 0 && g[a] === g[b]) { cells.add(a); cells.add(b); }
+    for (const [a, b, s] of P.links) if (g[a] >= 0 && g[b] >= 0 && (g[a] === g[b]) !== !!s) { cells.add(a); cells.add(b); }
     return { cells, lines };
   }
 
@@ -337,7 +350,7 @@
     for (let L = 0; L < 2 * n; L++) {
       if (bad.has(L)) continue;
       if (P.lc[L].every((i) => board[i] != null && board[i] >= 0)) {
-        const linkBad = P.links.some(([a, b]) => (P.lc[L].indexOf(a) >= 0 || P.lc[L].indexOf(b) >= 0) && board[a] >= 0 && board[a] === board[b]);
+        const linkBad = P.links.some(([a, b, s]) => (P.lc[L].indexOf(a) >= 0 || P.lc[L].indexOf(b) >= 0) && board[a] >= 0 && board[b] >= 0 && (board[a] === board[b]) !== !!s);
         if (!linkBad) out.push(L);
       }
     }

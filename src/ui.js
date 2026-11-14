@@ -413,10 +413,10 @@
     return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + pieces.map(img).join('') +
       '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
   }
-  function exLink(valid) {
+  function exLink(valid, same) {
     const sk = OP.skins.get(S().skin);
     const img = (v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>';
-    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + img(0) + '<span class="ex-link"></span>' + img(valid ? 1 : 0) +
+    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + img(0) + '<span class="ex-link' + (same ? ' same">=' : '">×') + '</span>' + img(valid !== !!same ? 1 : 0) +
       '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
   }
   function exGrid(rows, valid) {
@@ -436,14 +436,16 @@
         exGrid([[0, 0, 1, 1]], true) + exGrid([[0, 0, 0, 1]], false)),
       three: () => helpSection('No three in a row', 'Two of the same piece side by side is fine — three in a row is not.',
         exPair([0, 0, 1], true) + exPair([0, 0, 0], false)),
-      links: () => helpSection('Melt links', 'Tiles joined by the little dot must always be opposite.',
+      links: () => helpSection('Opposite ×', 'Two tiles with × between them must be opposite.',
         exLink(true) + exLink(false)),
+      bonds: () => helpSection('Same =', 'Two tiles with = between them must be the same.',
+        exLink(true, true) + exLink(false, true)),
     };
   }
   // only: optional array of section keys ('balance'|'three'|'links') to show just the new rule for a level.
   function openHelp(only) {
     const sections = helpSections();
-    const keys = only && only.length ? only : ['balance', 'three', 'links'];
+    const keys = only && only.length ? only : ['balance', 'three', 'links'].concat(S().level >= 16 ? ['bonds'] : []);
     const body = keys.map((k) => sections[k] ? sections[k]() : '').join('');
     const sub = only && only.length ? 'New rule for this level:' : 'Fill every tile so all the rules below hold at once.';
     modal('<div class="panel help"><h2>How to Play</h2><p class="sub">' + sub + '</p>' +

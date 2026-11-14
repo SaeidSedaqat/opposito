@@ -15,7 +15,7 @@
   let prevGood = [];
   const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [], focus: null, hover: [] };
   // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
-  const TUT_HELP = { 11: ['links'] }; // levels 1-10 open no How to Play popup (level 1 is the guided tutorial)
+  const TUT_HELP = { 11: ['links'], 16: ['bonds'] }; // levels 1-10 open no How to Play popup (level 1 is the guided tutorial)
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -102,7 +102,8 @@
     const sk = skin(); const nameOf = (v) => (v === 0 ? sk.an : sk.bn);
     const place = 'Place ' + nameOf(step.v) + ' here';
     switch (step.kind) {
-      case 'link': return place + ' — linked tiles (joined by the dot) are always opposite.';
+      case 'link': return place + ' — tiles with × between them are always opposite.';
+      case 'bond': return place + ' — tiles with = between them are always the same.';
       case 'pair': return 'Two ' + nameOf(step.p) + ' in a row already. ' + place + ', or three would match.';
       case 'sand': return nameOf(step.p) + ' on both sides of the gap. ' + place + ' to fill it in.';
       case 'count': return 'This line already has enough ' + nameOf(step.p) + '. ' + place + ' to balance it out.';
@@ -164,7 +165,7 @@
       const f = S().free;
       f.count = (f.count || 0) + 1; // every Play press is a fresh seed, so two free puzzles are never the same
       OP.save.soon();
-      return { n: f.n, diff: f.diff, links: f.diff >= 2, seed: 'free-' + f.count };
+      return { n: f.n, diff: f.diff, links: f.diff >= 2, bonds: f.diff >= 2, seed: 'free-' + f.count };
     }
     const t = C.today(); const s = C.dailySpec(t); s.key = t.key; return s;
   }
@@ -623,21 +624,24 @@
         this.gBg.strokeRoundedRect(cx + 1, cy + 1, CS - 2, CS - 2, 6 * dpr);
       }
       this.gLink.clear();
-      (pz.links || []).forEach(([a, b]) => {
+      // Links are flat badges on the shared edge: "×" = the two cells are opposite, "=" = the same.
+      const gl = this.gLink;
+      const bar = (cx, cy, len, th, ang) => { // a flat rounded bar centred on (cx, cy)
+        const ca = Math.cos(ang), sa = Math.sin(ang), hl = len / 2, ht = th / 2;
+        const pts = [[-hl, -ht], [hl, -ht], [hl, ht], [-hl, ht]].map(([x, y]) => ({ x: cx + x * ca - y * sa, y: cy + x * sa + y * ca }));
+        gl.fillPoints(pts, true);
+        gl.fillCircle(cx - hl * ca, cy - hl * sa, ht); gl.fillCircle(cx + hl * ca, cy + hl * sa, ht);
+      };
+      (pz.links || []).forEach(([a, b, s]) => {
         const ra = (a / n) | 0, ca = a % n, rb = (b / n) | 0, cb = b % n;
         const ax = ox + P + (ca + 0.5) * CS, ay = oy + P + (ra + 0.5) * CS;
         const bx = ox + P + (cb + 0.5) * CS, by = oy + P + (rb + 0.5) * CS;
-        const mx = (ax + bx) / 2, my = (ay + by) / 2, rad = CS * 0.14;
-        try {
-          this.gLink.fillStyle(0xff6a45, 1);
-          this.gLink.slice(mx, my, rad, Phaser.Math.DegToRad(90), Phaser.Math.DegToRad(270), false);
-          this.gLink.fillPath();
-          this.gLink.fillStyle(0x3fa4e8, 1);
-          this.gLink.slice(mx, my, rad, Phaser.Math.DegToRad(270), Phaser.Math.DegToRad(90), false);
-          this.gLink.fillPath();
-        } catch (e) { /* ignore */ }
-        this.gLink.lineStyle(2 * dpr, 0xffffff, 1);
-        this.gLink.strokeCircle(mx, my, rad);
+        const mx = (ax + bx) / 2, my = (ay + by) / 2, rad = CS * 0.19;
+        gl.fillStyle(0xffffff, 1); gl.fillCircle(mx, my, rad);
+        gl.lineStyle(1.5 * dpr, 0xc9d0db, 1); gl.strokeCircle(mx, my, rad);
+        const th = rad * 0.3;
+        if (s) { gl.fillStyle(0xF2A516, 1); bar(mx, my - rad * 0.27, rad * 0.95, th, 0); bar(mx, my + rad * 0.27, rad * 0.95, th, 0); }
+        else { gl.fillStyle(0x7B61D9, 1); bar(mx, my, rad * 1.05, th, Math.PI / 4); bar(mx, my, rad * 1.05, th, -Math.PI / 4); }
       });
       this.updatePieces();
     }
