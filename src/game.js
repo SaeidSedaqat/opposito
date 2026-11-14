@@ -41,8 +41,7 @@
   function obtain(spec, cb) {
     if (spec.fixed) { cb(Object.assign({ diff: spec.diff, rating: 1, seed: spec.seed }, JSON.parse(JSON.stringify(spec.fixed)))); return; }
     if (cache[spec.seed]) { const p = cache[spec.seed]; delete cache[spec.seed]; cb(p); return; }
-    OP.ui.setHud({ gen: true });
-    genPuzzle(spec, (p) => { OP.ui.setHud({ gen: false }); cb(p); });
+    genPuzzle(spec, cb);
   }
 
   // ---------- layout ----------
@@ -171,16 +170,28 @@
   }
 
   // ---------- flow ----------
-  function start(which) {
+  // Pressing Play fades the current screen out and shows "Loading..." for at least a second while
+  // the puzzle is made, then the game screen fades in. (Boot into the level-1 tutorial skips it:
+  // the main loading screen has just been shown.)
+  function start(which, opts) {
     mode = which;
     const spec = buildSpec(which);
-    OP.ui.show('game');
-    const needAd = (which === 'levels' && spec.level >= 4) || which === 'free';
-    if (needAd) OP.ui.adBreak(() => begin(which, spec));
-    else begin(which, spec);
+    const quick = opts && opts.quick, t0 = Date.now();
+    const saved = curObj()[which];
+    const resume = !!(saved && saved.spec && saved.spec.seed === spec.seed);
+    if (!quick) OP.ui.playLoading(true);
+    const go = (p) => {
+      OP.ui.playLoading(false);
+      OP.ui.show('game');
+      const needAd = (which === 'levels' && spec.level >= 4) || which === 'free';
+      if (needAd) OP.ui.adBreak(() => begin(which, spec, p));
+      else begin(which, spec, p);
+    };
+    const ready = (p) => { if (quick) go(p); else setTimeout(() => go(p), Math.max(0, 1000 - (Date.now() - t0))); };
+    if (resume) ready(null); else obtain(spec, ready);
   }
 
-  function begin(which, spec) {
+  function begin(which, spec, made) {
     clearHint();
     curSpec = spec; armed = null; prevGood = []; solved = false;
     clearTimeout(brokenTimer); fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
@@ -191,11 +202,12 @@
       afterLoad(which, spec);
       return;
     }
-    obtain(spec, (p) => {
+    const use = (p) => {
       pz = p; board = Array.from(pz.givens); hist = []; elapsed = 0;
       afterLoad(which, spec);
       if (TUT_HELP[spec.tut]) OP.ui.openHelp(TUT_HELP[spec.tut]);
-    });
+    };
+    if (made) use(made); else obtain(spec, use);
   }
 
   function afterLoad(which, spec) {
@@ -493,6 +505,7 @@
     if (name !== 'game' && mode === 'daily') stopDailyTimer();
     if (scene && scene.sys && scene.sys.game && scene.sys.game.canvas) {
       scene.sys.game.canvas.style.display = name === 'game' ? '' : 'none';
+      if (name === 'game') { const g = document.getElementById('game'); requestAnimationFrame(() => { g.style.opacity = '1'; }); }
     }
   }
   function refreshMarks() {

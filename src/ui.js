@@ -48,7 +48,7 @@
 
   // ---------- screens ----------
   function show(name) {
-    if (current === name) { refresh(name); return; }
+    if (current === name) { refresh(name); screens[name].classList.add('on'); if (name === 'game' && OP.game) OP.game.onScreen(name); return; }
     const prev = current ? screens[current] : null;
     current = name;
     const el = screens[name];
@@ -70,6 +70,24 @@
     root.appendChild(el);
     screens[name] = el;
     return el;
+  }
+
+  // ---------- "Loading..." between Home and a game (dots count 1, 2, 3, 1...) ----------
+  const pload = h('<div class="pload" hidden><b>Loading<span class="dots">.</span></b></div>');
+  root.appendChild(pload);
+  let ploadT = null;
+  function playLoading(on) {
+    clearInterval(ploadT);
+    if (on) {
+      if (current && screens[current]) screens[current].classList.remove('on'); // fade the current screen out
+      document.getElementById('game').style.opacity = '0'; // and the board (the canvas sits outside the screens)
+      const dots = pload.querySelector('.dots'); let k = 1; dots.textContent = '.';
+      ploadT = setInterval(() => { k = k % 3 + 1; dots.textContent = '...'.slice(0, k); }, 350);
+      pload.hidden = false; void pload.offsetWidth; pload.classList.add('on');
+    } else {
+      pload.classList.remove('on');
+      setTimeout(() => { if (!pload.classList.contains('on')) pload.hidden = true; }, 250);
+    }
   }
 
   // ---------- Home ----------
@@ -635,6 +653,6 @@
     show, refresh, get current() { return current; },
     msg, placeHud, setHud, setTimer, setBoosters, pointer, setLineNums,
     modal, modalOpen, openSettings, openPause, openHelp, openWin, maybeLogin, boosterAd,
-    rewardedAd, adBreak, toast, fmtTime, dailyState, logoHtml, esc,
+    rewardedAd, adBreak, playLoading, toast, fmtTime, dailyState, logoHtml, esc,
   };
 })();
