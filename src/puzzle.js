@@ -324,7 +324,8 @@
       }
       const cnt = [0, 0];
       for (let k = 0; k < n; k++) if (g[c[k]] >= 0) cnt[g[c[k]]]++;
-      for (let p = 0; p < 2; p++) if (cnt[p] > P.h) { for (let k = 0; k < n; k++) if (g[c[k]] === p) cells.add(c[k]); lines.add(L); }
+      // Too many of one piece: mark the player's pieces only, never the frozen givens (they are right).
+      for (let p = 0; p < 2; p++) if (cnt[p] > P.h) { for (let k = 0; k < n; k++) if (g[c[k]] === p && !(pz.givens && pz.givens[c[k]] >= 0)) cells.add(c[k]); lines.add(L); }
     }
     for (const [a, b] of P.links) if (g[a] >= 0 && g[a] === g[b]) { cells.add(a); cells.add(b); }
     return { cells, lines };
