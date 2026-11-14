@@ -5,15 +5,29 @@
 
   const DIFFS = ['Easy', 'Medium', 'Hard', 'Expert'];
 
-  // Levels 1-3: 4x4 tutorials. Level 1 introduces both starting rules at once; 3 adds frozen tiles.
+  // Hand-made boards: 0 = Fire, 1 = Ice, -1 = empty.
+  const I = 1, F = 0, E = -1;
+  const FIXED = {
+    1: { n: 4, links: [], givens: [I, F, F, E, F, I, I, F, I, F, F, I, E, I, I, F],
+      sol: [I, F, F, I, F, I, I, F, I, F, F, I, F, I, I, F] },
+    2: { n: 4, links: [], givens: [I, F, I, E, E, I, F, I, F, F, I, I, E, I, F, E],
+      sol: [I, F, I, F, F, I, F, I, F, F, I, I, I, I, F, F] },
+  };
+  // Level 1 steps, in order: the one cell the player may tap, the piece it needs, and the row to spotlight.
+  const GUIDE1 = [{ i: 12, v: F, line: 3 }, { i: 3, v: I, line: 0 }];
+
+  // Levels 1-5 are 4x4. Level 1 is a hand-made guided tutorial (one allowed tap per step, see
+  // game.js), 2 is hand-made with no help, 3 is an extra-easy generated board (extra = givens put
+  // back) that shows the three-in-a-row rule, 4-5 are a touch harder, and 6 is the first 6x6.
   // 11 introduces links the same way. Rows/columns are always kept distinct by the generator
   // itself (puzzle.js), so a "twin" row or column is simply never something a level needs to
   // teach or test for.
   function levelSpec(L) {
     let s;
-    if (L === 1) s = { n: 4, diff: 1, links: false, tut: 1 };
-    else if (L === 2) s = { n: 4, diff: 1, links: false };
-    else if (L === 3) s = { n: 4, diff: 1, links: false, tut: 3 };
+    if (L === 1) s = { n: 4, diff: 1, links: false, tut: 1, fixed: FIXED[1], guide: GUIDE1 };
+    else if (L === 2) s = { n: 4, diff: 1, links: false, fixed: FIXED[2] };
+    else if (L === 3) s = { n: 4, diff: 1, links: false, tut: 3, extra: 3 };
+    else if (L <= 5) s = { n: 4, diff: 1, links: false, extra: 1 };
     else if (L <= 10) s = { n: 6, diff: 1, links: false };
     else if (L === 11) s = { n: 6, diff: 1, links: true, tut: 11, require: 'link' };
     else if (L <= 15) s = { n: 6, diff: 1, links: true };
@@ -33,7 +47,7 @@
     }
     // Every 5th level is one step easier, except levels that introduce something new.
     if (L > 5 && L % 5 === 1 && [11, 21, 41].indexOf(L) < 0) s.diff = Math.max(1, s.diff - 1);
-    s.seed = 'level-' + L;
+    s.seed = 'level-' + L + (L <= 6 ? 'b' : ''); // 'b': levels 1-6 were redesigned in 0.1.189
     return s;
   }
 
@@ -66,7 +80,7 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.179',
+    VERSION: '0.1.189',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)

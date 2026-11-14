@@ -30,8 +30,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.179') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.179') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.189') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.189') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -181,7 +181,7 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 .glabel b{font-size:24px; font-weight:800; white-space:nowrap;}
 .glabel span{font-size:19px; font-weight:700; color:var(--sub); white-space:nowrap;}
 .gtimer{position:absolute; z-index:2; font-weight:800; font-size:15px; background:var(--panel); box-shadow:var(--shadow); border-radius:12px; padding:6px 12px; pointer-events:none;}
-.gmsg{position:absolute; z-index:2; display:flex; align-items:center; justify-content:center; text-align:center; height:40px;
+.gmsg{position:absolute; z-index:2; display:flex; align-items:flex-start; justify-content:center; text-align:center; height:40px; padding-top:4px; line-height:1.3;
   font-size:13.5px; font-weight:700; color:var(--sub); opacity:0; transform:translateY(-4px); transition:opacity .2s ease,transform .2s ease; pointer-events:none;}
 .gmsg.show{opacity:1; transform:translateY(0);}
 .gmsg.bad{color:var(--bad);}
@@ -189,12 +189,12 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 .bar{position:absolute; z-index:2; display:flex; gap:8px; background:var(--panel); box-shadow:var(--shadow); border-radius:18px; padding:8px; pointer-events:auto;}
 .boost{position:relative; flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:8px 4px; border-radius:13px; font-size:12.5px; font-weight:800; color:var(--ink); transition:transform .12s ease,background .15s;}
 .boost:active{transform:scale(.92);}
-.boost .ico{width:32px; height:32px;}
+.boost .ico{width:38px; height:38px;}
 .boost.armed{background:linear-gradient(135deg,var(--fire),var(--ice)); color:#fff;}
 .boost.off{opacity:.35; filter:grayscale(1);}
 .boost.off em{display:none;}
-.boost em{position:absolute; top:-8px; right:-2px; font-style:normal; font-size:20px; font-weight:800; background:var(--ink); color:#fff;
-  border-radius:16px; min-width:32px; height:32px; display:flex; align-items:center; justify-content:center; padding:0 6px; line-height:1; box-shadow:0 0 0 2px #fff;} /* count badge: circle +110%, text +100% (0.1.179) */
+.boost em{position:absolute; top:-8px; right:-2px; font-style:normal; font-size:16px; font-weight:800; background:var(--ink); color:#fff;
+  border-radius:13px; min-width:26px; height:26px; display:flex; align-items:center; justify-content:center; padding:0 6px; line-height:1; box-shadow:0 0 0 2px #fff;} /* count badge: 26px circle, 16px text (0.1.189) */
 .boost em.plus{background:var(--good);}
 .gen{position:absolute; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
   background:rgba(246,247,251,.9); border-radius:16px; pointer-events:none;}
@@ -347,7 +347,7 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 <body>
 <div id="loading">
   <!-- Same layout as the Home screen (invisible stand-ins for its buttons) so the logo sits exactly where Home shows it. -->
-  <div class="homebody"><div class="homemid"><div class="logo big"><img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=0.1.179"></div>
+  <div class="homebody"><div class="homemid"><div class="logo big"><img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=0.1.189"></div>
     <div class="menu lmenu"><div class="btn big"></div><div class="btn big"></div><div class="btn big"></div>
       <div class="lwrap">
         <div class="ltrack"><div id="lbar"></div></div>
@@ -362,16 +362,16 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 <script>
 (function(){
   'use strict';
-  var V = '0.1.179';
+  var V = '0.1.189';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
-    ['src/config.js', 3888],
+    ['src/config.js', 4852],
     ['src/save.js', 2076],
     ['src/skins.js', 12518],
     ['src/audio.js', 2791],
-    ['src/puzzle.js', 15600],
-    ['src/ui.js', 36040],
-    ['src/game.js', 32361],
+    ['src/puzzle.js', 15808],
+    ['src/ui.js', 35969],
+    ['src/game.js', 35194],
     ['src/main.js', 4992]
   ];
   var SFX = [

@@ -185,10 +185,10 @@
     '<div class="gtimer" id="gTimer" hidden>0:00</div>' +
     '<div class="gmsg" id="gMsg"></div>' +
     '<div class="bar" id="gBar">' +
-    '<button class="boost" data-b="undo" aria-label="Undo">' + ic('undo') + '<span>Undo</span></button>' +
-    '<button class="boost" data-b="hint" aria-label="Hint">' + ic('hint') + '<span>Hint</span><em></em></button>' +
-    '<button class="boost" data-b="check" aria-label="Check">' + ic('check') + '<span>Check</span><em></em></button>' +
-    '<button class="boost" data-b="reveal" aria-label="Reveal">' + ic('reveal') + '<span>Reveal</span><em></em></button>' +
+    '<button class="boost" data-b="undo" aria-label="Undo">' + ic('undo') + '</button>' +
+    '<button class="boost" data-b="hint" aria-label="Hint">' + ic('hint') + '<em></em></button>' +
+    '<button class="boost" data-b="check" aria-label="Check">' + ic('check') + '<em></em></button>' +
+    '<button class="boost" data-b="reveal" aria-label="Reveal">' + ic('reveal') + '<em></em></button>' +
     '</div>' +
     '<div class="gen" id="gGen" hidden><i></i><span>Creating puzzle…</span></div>' +
     '<div class="hand" id="gHand" hidden><i class="ring"></i>' +

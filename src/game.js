@@ -13,9 +13,9 @@
   let armed = null, adPaused = false;
   let dailyTimerId = null, dailyStart = 0;
   let prevGood = [];
-  const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [] };
+  const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [], focus: null };
   // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
-  const TUT_HELP = { 1: ['three', 'balance'], 11: ['links'] };
+  const TUT_HELP = { 3: ['three'], 11: ['links'] }; // level 1 teaches by guided taps instead (see guide below)
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -37,8 +37,9 @@
     }
   }
   const cache = {};
-  function prefetch(spec) { if (cache[spec.seed]) return; genPuzzle(spec, (p) => { if (p) cache[spec.seed] = p; }); }
+  function prefetch(spec) { if (spec.fixed || cache[spec.seed]) return; genPuzzle(spec, (p) => { if (p) cache[spec.seed] = p; }); }
   function obtain(spec, cb) {
+    if (spec.fixed) { cb(Object.assign({ diff: spec.diff, rating: 1, seed: spec.seed }, JSON.parse(JSON.stringify(spec.fixed)))); return; }
     if (cache[spec.seed]) { const p = cache[spec.seed]; delete cache[spec.seed]; cb(p); return; }
     OP.ui.setHud({ gen: true });
     genPuzzle(spec, (p) => { OP.ui.setHud({ gen: false }); cb(p); });
@@ -78,6 +79,7 @@
     OP.ui.placeHud(v);
     curL = Object.assign({}, v, { W: w, H: h, x: v.x * g, y: v.y * g, size: v.size * g, g, dpr: dprFor(w, h) });
     if (scene) scene.setLayout(curL);
+    if (guideStep()) pointAtCell(guideStep().i); // keep the hand on its cell after a resize
   }
 
   // ---------- performance ----------
@@ -119,6 +121,34 @@
     return [];
   }
 
+  // ---------- guided tutorial (level 1) ----------
+  // The current step is worked out from the board itself, so resuming, restarting or resizing
+  // always lands on the right step. Only that step's cell can be tapped.
+  function guideStep() {
+    if (!curSpec || !curSpec.guide || !board || solved) return null;
+    return curSpec.guide.find((s) => board[s.i] !== s.v) || null;
+  }
+  function showGuide() {
+    if (!curSpec || !curSpec.guide) { fx.focus = null; OP.ui.pointer(null); return; }
+    const st = guideStep();
+    fx.focus = st ? st.line : null; fx.hint = st ? st.i : null;
+    if (scene) scene.applyFx();
+    if (!st) { OP.ui.pointer(null); OP.ui.msg('Perfect! Every row and column is balanced.', { tone: 'good' }); return; }
+    const sk = skin(), A = sk.an, B = sk.bn;
+    let t;
+    if (st.v === 0) t = 'Each row needs as many ' + A + ' as ' + B + '.<br>Tap here to place ' + A + '!';
+    else if (board[st.i] === 0) t = 'Tap again to turn it into ' + B + '.';
+    else t = 'This row needs one more ' + B + '.<br>Tap twice: ' + A + ', then ' + B + '.';
+    OP.ui.msg(t);
+    pointAtCell(st.i);
+  }
+  function pointAtCell(i) {
+    if (!curL || !pz) return;
+    const g = curL.g || 1, n = pz.n, size = curL.size / g, pad = size * 0.03, cs = (size - 2 * pad) / n;
+    const cx = curL.x / g + pad + (i % n + 0.5) * cs, cy = curL.y / g + pad + (((i / n) | 0) + 0.5) * cs;
+    OP.ui.pointer(cx - 16, cy - 3); // the hand's ring is centred 16px right / 3px down of its anchor
+  }
+
   // ---------- save / resume ----------
   function saveCur() {
     if (!mode || !pz) return;
@@ -151,6 +181,7 @@
   function begin(which, spec) {
     curSpec = spec; armed = null; prevGood = []; solved = false;
     clearTimeout(brokenTimer); fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
+    fx.focus = null; OP.ui.pointer(null);
     const saved = curObj()[which];
     if (saved && saved.spec && saved.spec.seed === spec.seed) {
       pz = saved.pz; board = saved.board.slice(); hist = saved.hist || []; elapsed = saved.elapsed || 0;
@@ -178,8 +209,8 @@
     updateBoosterUI();
     saveCur();
 
-    if (spec.tut === 3) OP.ui.msg('Frozen tiles (shaded) can’t change. Fill in the rest!', { ms: 3400 });
-    else OP.ui.msg('');
+    OP.ui.msg('');
+    showGuide();
 
     if (which === 'levels') prefetch(C.levelSpec(spec.level + 1));
 
@@ -204,7 +235,7 @@
     fx.bad = [];
     if (scene) scene.updatePieces(); // just the pieces moved/changed, not the board frame or links
     clearTimeout(badTimer);
-    if (S().settings.auto) {
+    if (S().settings.auto && !guideStep()) { // no red marks mid-tutorial (Fire is briefly in the Ice cell)
       badTimer = setTimeout(() => {
         fx.bad = Array.from(OP.Puzzle.violations(pz, board).cells);
         if (scene) scene.applyFx();
@@ -231,6 +262,7 @@
       clearTimeout(brokenTimer);
       brokenTimer = setTimeout(() => {
         if (!isFull(board)) return;
+        if (guideStep()) return; // tutorial: the cell is mid-cycle (Fire on its way to Ice), not a mistake
         const v2 = OP.Puzzle.violations(pz, board);
         if (v2.cells.size === 0) return;
         fx.broken = Array.from(v2.cells);
@@ -286,12 +318,15 @@
     if (scene) scene.popAt(i);
     saveCur();
     checkWinOrBroken();
+    if (curSpec && curSpec.guide) showGuide();
   }
 
   function tap(i) {
     if (adPaused || OP.ui.modalOpen() || !pz || solved) return;
     if (armed === 'check') { doCheck(i); return; }
     if (armed === 'reveal') { doReveal(i); return; }
+    const st = guideStep();
+    if (st && i !== st.i) { if (scene) scene.shakeCell(i); pointAtCell(st.i); return; }
     if (pz.givens[i] >= 0) { if (scene) scene.shakeCell(i); return; }
     const before = board[i], after = before < 0 ? 0 : (before === 0 ? 1 : -1);
     applyPlacement(i, after, before);
@@ -363,6 +398,7 @@
   }
   function booster(k) {
     if (!pz || solved || adPaused || OP.ui.modalOpen()) return;
+    if (guideStep()) { OP.ui.msg('Follow the hand first!', { ms: 1400, after: showGuide }); return; }
     if (k === 'undo') return doUndo();
     if (mode === 'daily') { OP.ui.msg('No boosters in the Daily', { ms: 1400 }); return; }
     if (k === 'hint') return doHint();
@@ -388,6 +424,7 @@
     if (scene) scene.updatePieces();
     updateBoosterUI(); saveCur();
     if (mode === 'daily') startDailyTimer();
+    showGuide();
   }
   function pause() {
     if (!pz) return;
@@ -562,6 +599,14 @@
       const rectFor = (i) => { const r = (i / n) | 0, c = i % n; return [ox + P + c * CS + 1, oy + P + r * CS + 1, CS - 2, CS - 2]; };
       kick(); // pieces or highlights changed: draw a frame
       this.gFx.clear();
+      if (fx.focus != null) {
+        // Tutorial spotlight: wash out every other row and ring the focused one.
+        const keep = OP.Puzzle.ctx(n, pz.links).lc[fx.focus];
+        for (let i = 0; i < n * n; i++) if (keep.indexOf(i) < 0) { this.gFx.fillStyle(0xf3f5f9, 0.62); this.gFx.fillRoundedRect.apply(this.gFx, rectFor(i).concat([6 * dpr])); }
+        const a = rectFor(keep[0]), b = rectFor(keep[keep.length - 1]), m = 3 * dpr;
+        this.gFx.lineStyle(4 * dpr, 0xffb02e, 1);
+        this.gFx.strokeRoundedRect(a[0] - m, a[1] - m, b[0] + b[2] - a[0] + 2 * m, b[1] + b[3] - a[1] + 2 * m, 10 * dpr);
+      }
       (fx.evidence || []).forEach((i) => {
         const r = rectFor(i);
         this.gFx.fillStyle(0x3fa4e8, 0.16); this.gFx.fillRoundedRect.apply(this.gFx, r.concat([6 * dpr]));

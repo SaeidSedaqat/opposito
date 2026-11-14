@@ -265,6 +265,8 @@
           if (!solve(P, g, sol, t).ok) g[i] = v;
         }
       }
+      // Easier boards: put a few solved cells back as givens.
+      if (opts.extra) { const em = order.filter((i) => g[i] < 0); for (let k = 0; k < opts.extra && k < em.length; k++) g[em[k]] = sol[em[k]]; }
       // Drop links that join two given cells: they tell the player nothing.
       const keep = links.filter(([a, b]) => g[a] < 0 || g[b] < 0);
       const P2 = ctx(n, keep);
