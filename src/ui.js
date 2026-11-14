@@ -99,35 +99,27 @@
   home.querySelector('#hSet').onclick = () => openSettings();
   home.querySelector('#hShop').onclick = () => show('shop');
   home.querySelector('#hLevels').onclick = () => OP.game.start('levels');
-  home.querySelector('#hFree').onclick = () => show('free');
+  home.querySelector('#hFree').onclick = () => openFree();
   home.querySelector('#hDaily').onclick = () => { if (!dailyState().solved) OP.game.start('daily'); };
 
-  // ---------- Free Play ----------
-  const free = screen('free',
-    '<div class="topbar tall"><button class="circ" id="fBack" aria-label="Back">' + ic('back') + '</button>' +
-    '<h1 class="title">Free Play</h1><span class="circ ghost"></span></div>' +
-    '<div class="freebody">' +
-    '<div class="lbl">Size</div><div class="pills" id="fSize"></div>' +
-    '<div class="lbl">Difficulty</div><div class="pills" id="fDiff"></div>' +
-    '<div class="pvwrap"><div class="preview" id="fPrev"></div></div>' +
-    '<button class="btn primary big play" id="fPlay">' + ic('play') + '<span class="t">Play</span></button>' +
-    '</div>');
-
-  renderers.free = function () {
-    const f = S().free;
-    if (f.n === 4) f.diff = 1;
-    free.querySelector('#fSize').innerHTML = C.SIZES.map((n) => '<button class="pill' + (f.n === n ? ' on' : '') + '" data-n="' + n + '">' + n + '×' + n + '</button>').join('');
-    free.querySelector('#fDiff').innerHTML = C.DIFFS.map((d, k) => '<button class="pill' + (f.diff === k + 1 ? ' on' : '') + '" data-d="' + (k + 1) + '"' + (f.n === 4 && k > 0 ? ' disabled' : '') + '>' + d + '</button>').join('');
-    const p = free.querySelector('#fPrev');
-    p.style.setProperty('--n', f.n);
-    let cells = '';
-    for (let i = 0; i < f.n * f.n; i++) cells += '<i></i>';
-    p.innerHTML = cells;
-  };
-  free.querySelector('#fSize').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S().free.n = +b.dataset.n; OP.save.soon(); renderers.free(); };
-  free.querySelector('#fDiff').onclick = (e) => { const b = e.target.closest('button'); if (!b || b.disabled) return; S().free.diff = +b.dataset.d; OP.save.soon(); renderers.free(); };
-  free.querySelector('#fBack').onclick = () => show('home');
-  free.querySelector('#fPlay').onclick = () => OP.game.start('free');
+  // ---------- Free Play (popup) ----------
+  function openFree() {
+    const m = modal('<div class="panel free"><h2>Free Play</h2>' +
+      '<div class="lbl">Size</div><div class="pills" id="fSize"></div>' +
+      '<div class="lbl">Difficulty</div><div class="pills" id="fDiff"></div>' +
+      '<button class="btn primary big play" id="fPlay">' + ic('play') + '<span class="t">Play</span></button>' +
+      '<button class="btn flat" data-x="close">Cancel</button></div>');
+    const render = () => {
+      const f = S().free;
+      if (f.n === 4) f.diff = 1;
+      m.querySelector('#fSize').innerHTML = C.SIZES.map((n) => '<button class="pill' + (f.n === n ? ' on' : '') + '" data-n="' + n + '">' + n + '×' + n + '</button>').join('');
+      m.querySelector('#fDiff').innerHTML = C.DIFFS.map((d, k) => '<button class="pill' + (f.diff === k + 1 ? ' on' : '') + '" data-d="' + (k + 1) + '"' + (f.n === 4 && k > 0 ? ' disabled' : '') + '>' + d + '</button>').join('');
+    };
+    render();
+    m.querySelector('#fSize').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S().free.n = +b.dataset.n; OP.save.soon(); OP.audio.play('click'); render(); };
+    m.querySelector('#fDiff').onclick = (e) => { const b = e.target.closest('button'); if (!b || b.disabled) return; S().free.diff = +b.dataset.d; OP.save.soon(); OP.audio.play('click'); render(); };
+    m.querySelector('#fPlay').onclick = () => m.close(() => OP.game.start('free'));
+  }
 
   // ---------- Shop ----------
   const shop = screen('shop',
