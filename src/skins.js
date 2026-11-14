@@ -157,6 +157,7 @@
     list: LIST,
     get(id) { return byId[id] || LIST[0]; },
     icon(name, size) { return svg(ICONS[name], size); },
-    dataUri(name, size) { return 'data:image/svg+xml;base64,' + btoa(svg(ICONS[name], size)); },
+    // Piece art: generated WebP images (assets/art/pieces). The SVGs above remain as icon() fallbacks.
+    dataUri(name) { return 'assets/art/pieces/' + name + '.webp?v=' + OP.config.VERSION; },
   };
 })();

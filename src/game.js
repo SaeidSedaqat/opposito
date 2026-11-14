@@ -503,7 +503,7 @@
         if (v < 0) cont.pieceImg.setVisible(false);
         else {
           const nm = v === 0 ? sk.pa : sk.pb;
-          cont.pieceImg.setTexture('pc_' + nm).setVisible(true).setDisplaySize(g.CS * 0.7, g.CS * 0.7);
+          cont.pieceImg.setTexture('pc_' + nm).setVisible(true).setDisplaySize(g.CS * 0.84, g.CS * 0.84);
         }
       }
       this.applyFx();
