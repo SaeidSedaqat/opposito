@@ -30,7 +30,11 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) onResizeSoon(); });
 
   OP.game.layout(sz.w, sz.h);
-  OP.ui.show('home'); // this alone triggers OP.game.onScreen('home'), which shows the login reward if due
+  // A brand-new player (still on level 1, never claimed a daily reward) goes straight into level 1.
+  // Their first daily reward then shows the first time they return Home.
+  const d = OP.save.d;
+  if (d.level === 1 && d.login.day === 0) OP.game.start('levels');
+  else OP.ui.show('home'); // this alone triggers OP.game.onScreen('home'), which shows the login reward if due
 
   // ---------- dev mode: ?dev=1 ----------
   if (new URLSearchParams(location.search).get('dev') === '1') setupDevPanel();

@@ -274,7 +274,7 @@
   }
 
   // ---------- boosters ----------
-  function updateBoosterUI() { OP.ui.setBoosters({ reveal: !!(pz && pz.n >= 8), armed, undo: hist.length > 0 }); }
+  function updateBoosterUI() { OP.ui.setBoosters({ reveal: !!(pz && pz.n >= 8), armed, undo: hist.length > 0, off: mode === 'daily' }); }
   function doUndo() {
     if (!hist.length) return;
     const last = hist.pop();
@@ -340,6 +340,7 @@
   function booster(k) {
     if (!pz || adPaused || OP.ui.modalOpen()) return;
     if (k === 'undo') return doUndo();
+    if (mode === 'daily') { OP.ui.msg('No boosters in the Daily', { ms: 1400 }); return; }
     if (k === 'hint') return doHint();
     if (k === 'check') { armed = armed === 'check' ? null : 'check'; updateBoosterUI(); OP.audio.play('click'); return; }
     if (k === 'reveal') { if (pz.n < 8) return; armed = armed === 'reveal' ? null : 'reveal'; updateBoosterUI(); OP.audio.play('click'); return; }
@@ -418,6 +419,7 @@
           if (!seen[nm]) { seen[nm] = 1; this.load.image('pc_' + nm, OP.skins.dataUri(nm, 200)); }
         });
       });
+      this.load.image('fx_spark', 'assets/art/fx/spark.webp?v=' + OP.config.VERSION);
     }
     create() {
       // Capped: a full 3x device pixel ratio triples the fill-rate for no visible gain on a flat-shaded board.
@@ -557,30 +559,71 @@
       this.tweens.add({ targets: cont, x: [x0 - 6 * this.dpr, x0 + 6 * this.dpr, x0 - 4 * this.dpr, x0 + 4 * this.dpr, x0], duration: 260, ease: 'Sine.easeInOut' });
       OP.audio.play('wrong', 0.5);
     }
+    // Win celebration (fills the 2 s before the win popup): ring, a diagonal wave through every tile,
+    // sparkle bursts and twinkles across the board. Sparkle sprite: assets/art/fx/spark.webp (Bing).
     winRipple() {
       try {
-        const L = this.L; if (!L) return;
-        const dpr = this.dpr, cx = (L.x + L.size / 2) * dpr, cy = (L.y + L.size / 2) * dpr;
-        const ring = this.add.circle(cx, cy, 10 * dpr, 0xffffff, 0).setStrokeStyle(4 * dpr, 0xffd27a, 1).setDepth(5);
+        const L = this.L; if (!L || !pz) return;
+        const dpr = this.dpr, n = pz.n, g = this.geom();
+        const cx = g.ox + g.Sz / 2, cy = g.oy + g.Sz / 2;
+        const tint = [0xff6a45, 0x3fa4e8, 0xffc23d, 0xffffff];
+        const hasSpark = this.textures.exists('fx_spark');
+        const spark = (x, y, size, color, depth) => {
+          if (hasSpark) return this.add.image(x, y, 'fx_spark').setDisplaySize(size, size).setTint(color).setDepth(depth || 7);
+          return this.add.circle(x, y, size / 5, color, 1).setDepth(depth || 7);
+        };
+        // 1. Expanding gold ring.
+        const ring = this.add.circle(cx, cy, 10 * dpr, 0xffffff, 0).setStrokeStyle(5 * dpr, 0xffc23d, 1).setDepth(5);
         this.tweens.add({
-          targets: ring, radius: L.size * 0.75 * dpr, duration: 700, ease: 'Cubic.easeOut',
-          onUpdate: () => { try { ring.setStrokeStyle(4 * this.dpr, 0xffd27a, 1 - ring.radius / (L.size * 0.75 * dpr)); } catch (e2) { /* ignore */ } },
+          targets: ring, radius: L.size * 0.8 * dpr, duration: 800, ease: 'Cubic.easeOut',
+          onUpdate: () => { try { ring.setStrokeStyle(5 * this.dpr, 0xffc23d, 1 - ring.radius / (L.size * 0.8 * dpr)); } catch (e2) { /* ignore */ } },
           onComplete: () => ring.destroy(),
         });
-        // A small burst of fire/ice/gold particles, bursting outward and drifting up as they fade.
-        const colors = [0xff6a45, 0x3fa4e8, 0xffd27a];
-        const count = 26;
-        for (let k = 0; k < count; k++) {
-          const ang = (k / count) * Math.PI * 2 + (Math.random() - 0.5) * 0.5;
-          const dist = (L.size * 0.3 + Math.random() * L.size * 0.3) * dpr;
-          const size = (2.5 + Math.random() * 3) * dpr;
-          const p = this.add.circle(cx, cy, size, colors[k % colors.length], 1).setDepth(6);
-          const tx = cx + Math.cos(ang) * dist, ty = cy + Math.sin(ang) * dist - 14 * dpr;
-          this.tweens.add({
-            targets: p, x: tx, y: ty, alpha: 0, scale: 0.3, duration: 600 + Math.random() * 300, ease: 'Cubic.easeOut',
-            onComplete: () => p.destroy(),
+        // 2. Diagonal wave: each tile hops and flashes a sparkle as the wave passes.
+        for (let i = 0; i < n * n; i++) {
+          const cont = this.cellC[i]; if (!cont) continue;
+          const r = (i / n) | 0, c = i % n, delay = 120 + (r + c) * 55;
+          this.tweens.add({ targets: cont, scale: 1.22, duration: 140, delay, yoyo: true, ease: 'Sine.easeOut', onComplete: () => cont.setScale(1) });
+          this.time.delayedCall(delay + 60, () => {
+            const x = g.ox + g.P + c * g.CS + g.CS / 2, y = g.oy + g.P + r * g.CS + g.CS / 2;
+            const s = spark(x, y, g.CS * 0.9, (r + c) % 2 ? 0xffc23d : 0xffe9a8).setScale(0).setAlpha(0.95);
+            const full = (g.CS * 0.9) / (hasSpark ? 128 : 1);
+            this.tweens.add({ targets: s, scale: hasSpark ? full : 1, angle: 12, duration: 180, yoyo: true, ease: 'Sine.easeOut', onComplete: () => s.destroy() });
           });
         }
+        // 3. Bursts: one from the centre now, three more around the board as the wave ends.
+        const burst = (bx, by, count, reach) => {
+          for (let k = 0; k < count; k++) {
+            const ang = (k / count) * Math.PI * 2 + Math.random() * 0.4;
+            const dist = reach * (0.5 + Math.random() * 0.5);
+            const sz = (14 + Math.random() * 16) * dpr;
+            const s = spark(bx, by, sz, tint[k % tint.length]);
+            s.setAngle(Math.random() * 90);
+            this.tweens.add({
+              targets: s, x: bx + Math.cos(ang) * dist, y: by + Math.sin(ang) * dist + 20 * dpr,
+              angle: s.angle + 180, alpha: 0, scale: s.scale * 0.3, duration: 700 + Math.random() * 400, ease: 'Cubic.easeOut',
+              onComplete: () => s.destroy(),
+            });
+          }
+        };
+        burst(cx, cy, 28, L.size * 0.6 * dpr);
+        const wave = 120 + (2 * n - 2) * 55;
+        [[0.22, 0.25], [0.78, 0.3], [0.5, 0.8]].forEach((p, k) => {
+          this.time.delayedCall(wave * 0.6 + k * 180, () => {
+            burst(g.ox + g.Sz * p[0], g.oy + g.Sz * p[1], 14, L.size * 0.32 * dpr);
+            OP.audio.play('clear', 0.35, 1.2 + k * 0.15);
+          });
+        });
+        // 4. Twinkles scattered over the board until the popup arrives.
+        this.time.addEvent({
+          delay: 70, repeat: 22, callback: () => {
+            const x = g.ox + Math.random() * g.Sz, y = g.oy + Math.random() * g.Sz;
+            const sz = (10 + Math.random() * 18) * dpr;
+            const s = spark(x, y, sz, [0xffc23d, 0xffe9a8, 0xffffff][(Math.random() * 3) | 0]);
+            const sc = s.scale; s.setScale(0);
+            this.tweens.add({ targets: s, scale: sc, angle: 90, duration: 260, yoyo: true, ease: 'Sine.easeInOut', onComplete: () => s.destroy() });
+          },
+        });
       } catch (e) { /* ignore */ }
     }
   }

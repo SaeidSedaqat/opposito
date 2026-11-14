@@ -37,15 +37,15 @@
     return s;
   }
 
-  // Daily: weekday rotation, easier early in the week, never Expert, never 10x10.
+  // Daily: always 6x6 Hard or 8x8 Medium, alternating by weekday. No boosters (game.js).
   const DAILY = [
-    { n: 8, diff: 3 }, // Sun
-    { n: 6, diff: 1 }, // Mon
-    { n: 6, diff: 2 }, // Tue
-    { n: 8, diff: 1 }, // Wed
+    { n: 8, diff: 2 }, // Sun
+    { n: 6, diff: 3 }, // Mon
+    { n: 8, diff: 2 }, // Tue
+    { n: 6, diff: 3 }, // Wed
     { n: 8, diff: 2 }, // Thu
     { n: 6, diff: 3 }, // Fri
-    { n: 8, diff: 3 }, // Sat
+    { n: 8, diff: 2 }, // Sat
   ];
   function pad(x) { return (x < 10 ? '0' : '') + x; }
   function today() {
@@ -66,7 +66,7 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.146',
+    VERSION: '0.1.156',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)

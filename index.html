@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.146') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.146') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.156') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.156') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -161,6 +161,8 @@ img{display:block; max-width:100%;}
 .boost .ico{width:32px; height:32px;}
 .boost.armed{background:linear-gradient(135deg,var(--fire),var(--ice)); color:#fff;}
 .boost.dim{opacity:.4;}
+.boost.off{opacity:.35; filter:grayscale(1);}
+.boost.off em{display:none;}
 .boost em{position:absolute; top:2px; right:6px; font-style:normal; font-size:10px; font-weight:800; background:var(--ink); color:#fff;
   border-radius:8px; min-width:15px; height:15px; display:flex; align-items:center; justify-content:center; padding:0 3px;}
 .boost em.plus{background:var(--good);}
@@ -192,6 +194,9 @@ img{display:block; max-width:100%;}
 .panel.free .play{margin-top:4px;}
 .panel.free .play .t{font-size:38px;}
 .panel.free .play .ico{width:48px; height:48px;}
+#hLevels{margin-top:0;}
+#hLevels .t{font-size:38px;}
+#hLevels .ico{width:48px; height:48px; left:4px;}
 .freward{display:flex; align-items:center; justify-content:center; gap:6px; margin-top:8px; font-size:17px; font-weight:800; color:var(--sub);}
 .freward .ico{width:30px; height:30px;}
 .freward b{font-size:24px; color:#B8790E;}
@@ -261,6 +266,18 @@ img{display:block; max-width:100%;}
 /* ---------- win panel ---------- */
 .panel.win{align-items:center; text-align:center;}
 .solved{background:linear-gradient(135deg,var(--fire),var(--ice)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.wrays{position:fixed; left:50%; width:560px; height:560px; margin:-280px 0 0 -280px; pointer-events:none; background:radial-gradient(circle,#FFF3C4 0%,#FFC23D 45%,#FF9F3D 100%); -webkit-mask:url(assets/art/fx/rays.webp) center/contain no-repeat; mask:url(assets/art/fx/rays.webp) center/contain no-repeat; opacity:0;}
+.modal.on .wrays{opacity:.9; transform:scale(1); animation:wrin .6s cubic-bezier(.2,1.4,.4,1) both, wspin 14s linear infinite;}
+@keyframes wrin{from{opacity:0; transform:scale(.3);} to{opacity:.9; transform:scale(1);}}
+@keyframes wspin{from{rotate:0deg;} to{rotate:360deg;}}
+.panel.win{overflow:visible;}
+.modal.on .panel.win .solved{animation:wpop .55s cubic-bezier(.2,1.6,.4,1) both .1s;}
+@keyframes wpop{0%{transform:scale(.3); opacity:0;} 100%{transform:scale(1); opacity:1;}}
+.wspark{position:absolute; width:30px; height:30px; pointer-events:none; background:#FFB020; -webkit-mask:url(assets/art/fx/spark.webp) center/contain no-repeat; mask:url(assets/art/fx/spark.webp) center/contain no-repeat; animation:wtw 1.6s ease-in-out infinite; transform:scale(0);}
+@keyframes wtw{0%,100%{transform:scale(0) rotate(0deg);} 50%{transform:scale(1) rotate(90deg);}}
+#wCoins.pop{animation:cpop .35s ease-out;}
+@keyframes cpop{50%{transform:scale(1.35);}}
+.confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:2;}
 .reward{display:flex; align-items:center; gap:8px; font-size:26px; font-weight:800; margin:4px 0;}
 .reward .ico{width:30px; height:30px;}
 .bonus{display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:700; color:var(--sub); background:#F3F5F9; border-radius:12px; padding:6px 12px;}
@@ -302,17 +319,17 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.146';
+  var V = '0.1.156';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
-    ['src/config.js', 3881],
+    ['src/config.js', 3888],
     ['src/save.js', 2076],
     ['src/skins.js', 12518],
     ['src/audio.js', 2679],
     ['src/puzzle.js', 15600],
-    ['src/ui.js', 32643],
-    ['src/game.js', 27075],
-    ['src/main.js', 4371]
+    ['src/ui.js', 35542],
+    ['src/game.js', 29846],
+    ['src/main.js', 4641]
   ];
   var SFX = [
     ['click', 669], ['fire', 1296], ['ice', 1505], ['clear', 669], ['line', 1923],

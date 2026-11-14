@@ -68,8 +68,8 @@
   const home = screen('home',
     '<div class="homebody"><div class="homemid"><div class="logo big">' + logoHtml() + '</div>' +
     '<div class="menu">' +
-    '<button class="btn primary big" id="hLevels"><span class="t">Levels</span><span class="s" id="hLevelN"></span></button>' +
-    '<button class="btn big" id="hFree"><span class="t">Free Play</span><span class="s">Any size, any difficulty</span></button>' +
+    '<button class="btn primary big play" id="hLevels">' + ic('play-white') + '<span class="t" id="hLevelN">Level 1</span></button>' +
+    '<button class="btn big" id="hFree"><span class="t">Free Play</span></button>' +
     '<button class="btn big daily" id="hDaily"><span class="t">Daily</span><span class="s" id="hDailyS"></span></button>' +
     '</div></div>' +
     '<div class="footrow">' +
@@ -258,6 +258,7 @@
       if (k === 'reveal') el.hidden = !state.reveal;
       el.classList.toggle('armed', state.armed === k);
       if (k === 'undo') { el.classList.toggle('dim', !state.undo); return; }
+      el.classList.toggle('off', !!state.off);
       const em = el.querySelector('em');
       em.textContent = b[k] > 0 ? b[k] : '+';
       em.classList.toggle('plus', !(b[k] > 0));
@@ -498,6 +499,7 @@
         '<button class="btn primary" id="wHome">' + ic('home') + 'Home</button>';
     }
     const m = modal('<div class="panel win"><h2 class="solved">Solved!</h2>' + body + '</div>', { dismiss: false, silent: true });
+    winFx(m);
     const nx = m.querySelector('#wNext'), hm = m.querySelector('#wHome'), db = m.querySelector('#wDouble');
     if (nx) nx.onclick = () => m.close(o.next);
     if (hm) hm.onclick = () => m.close(o.home);
@@ -506,10 +508,66 @@
       rewardedAd(() => {
         S().coins += o.coins; OP.save.persist();
         OP.audio.play('coin');
+        m.querySelector('#wCoins').dataset.done = '1';
         m.querySelector('#wCoins').textContent = '+' + o.coins * 2;
         db.innerHTML = ic('tick') + 'Coins doubled';
       });
     };
+  }
+
+  // Win popup juice: slowly turning gold rays behind the panel (assets/art/fx/rays.webp, Bing),
+  // a confetti shower, twinkling sparkles round the title and a coin count-up.
+  function winFx(m) {
+    const panel = m.querySelector('.panel');
+    const rays = h('<div class="wrays"></div>');
+    m.insertBefore(rays, panel);
+    const place = () => { const r = panel.getBoundingClientRect(); rays.style.top = (r.top + 40) + 'px'; };
+    place(); setTimeout(place, 220);
+    [[8, 14, 0], [84, 10, 0.5], [16, 52, 1], [78, 48, 1.4]].forEach((p) => {
+      panel.appendChild(h('<div class="wspark" style="left:' + p[0] + '%;top:' + p[1] + 'px;animation-delay:' + p[2] + 's"></div>'));
+    });
+    const wc = m.querySelector('#wCoins');
+    if (wc) {
+      const to = parseInt(wc.textContent.replace(/\D/g, ''), 10) || 0, t0 = performance.now() + 250;
+      wc.textContent = '+0';
+      const step = (now) => {
+        if (!m.isConnected || wc.dataset.done) return;
+        const k = Math.max(0, Math.min(1, (now - t0) / 700));
+        wc.textContent = '+' + Math.round(to * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) requestAnimationFrame(step); else { wc.classList.add('pop'); OP.audio.play('coin', 0.6); }
+      };
+      requestAnimationFrame(step);
+    }
+    // Confetti on a canvas over the whole popup.
+    const cv = h('<canvas class="confetti"></canvas>');
+    m.appendChild(cv);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2), W = window.innerWidth, H = window.innerHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    const cols = ['#FF6A45', '#3FA4E8', '#FFC23D', '#7ED957', '#FF8FC8', '#FFFFFF'];
+    const bits = [];
+    for (let k = 0; k < 90; k++) {
+      bits.push({
+        x: W / 2 + (Math.random() - 0.5) * 60, y: H * 0.42, vx: (Math.random() - 0.5) * 9, vy: -6 - Math.random() * 9,
+        w: 6 + Math.random() * 6, h: 9 + Math.random() * 8, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.35,
+        c: cols[k % cols.length], f: Math.random() * 6.28,
+      });
+    }
+    const start = performance.now();
+    const tick = (now) => {
+      if (!m.isConnected) return;
+      const t = (now - start) / 1000;
+      ctx.clearRect(0, 0, W, H);
+      bits.forEach((b) => {
+        b.vy += 0.32; b.vx *= 0.985; b.vy = Math.min(b.vy, 3.2 + Math.sin(b.f + t * 4));
+        b.x += b.vx + Math.sin(b.f + t * 3) * 0.6; b.y += b.vy; b.a += b.va;
+        ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, 3.2 - t)); ctx.translate(b.x, b.y); ctx.rotate(b.a);
+        ctx.scale(1, Math.abs(Math.cos(b.f + t * 6)) * 0.8 + 0.2);
+        ctx.fillStyle = b.c; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.restore();
+      });
+      if (t < 3.3) requestAnimationFrame(tick); else cv.remove();
+    };
+    requestAnimationFrame(tick);
   }
 
   // ---------- toast ----------
