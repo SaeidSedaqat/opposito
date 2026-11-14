@@ -28,6 +28,14 @@
   // Button icons: generated WebP art (assets/art/ui); the SVGs above are only a fallback for keys without art.
   const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
   const ic = (k) => '<i class="ico">' + (ART.indexOf(k) >= 0 ? '<img alt="" draggable="false" src="assets/art/ui/' + k + '.webp?v=' + OP.config.VERSION + '">' : ICON[k]) + '</i>';
+  // Check / Reveal icons: their art over a little 3x3 grid that shows what they act on --
+  // Check lights up one cell, Reveal a whole row.
+  function gridIc(k) {
+    const on = k === 'check' ? [4] : [3, 4, 5], col = k === 'check' ? '#3FA4E8' : '#2FBFAE';
+    let cells = '';
+    for (let j = 0; j < 9; j++) cells += '<rect x="' + (1 + (j % 3) * 8) + '" y="' + (1 + ((j / 3) | 0) * 8) + '" width="7" height="7" rx="1.6" fill="' + (on.indexOf(j) >= 0 ? col : '#D9DFE8') + '"/>';
+    return '<i class="ico combo"><svg viewBox="0 0 25 25">' + cells + '</svg><img alt="" draggable="false" src="assets/art/ui/' + k + '.webp?v=' + OP.config.VERSION + '"></i>';
+  }
   const flame = () => '<img class="flame" alt="" src="' + OP.skins.dataUri('fire', 64) + '">';
 
   function h(html) { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
@@ -187,10 +195,11 @@
     '<div class="bar" id="gBar">' +
     '<button class="boost" data-b="undo" aria-label="Undo">' + ic('undo') + '</button>' +
     '<button class="boost" data-b="hint" aria-label="Hint">' + ic('hint') + '<em></em></button>' +
-    '<button class="boost" data-b="check" aria-label="Check">' + ic('check') + '<em></em></button>' +
-    '<button class="boost" data-b="reveal" aria-label="Reveal">' + ic('reveal') + '<em></em></button>' +
+    '<button class="boost" data-b="check" aria-label="Check">' + gridIc('check') + '<em></em></button>' +
+    '<button class="boost" data-b="reveal" aria-label="Reveal">' + gridIc('reveal') + '<em></em></button>' +
     '</div>' +
     '<div class="gen" id="gGen" hidden><i></i><span>Creating puzzle…</span></div>' +
+    '<div class="gnums" id="gNums" hidden></div>' +
     '<div class="hand" id="gHand" hidden><i class="ring"></i>' +
     '<svg viewBox="0 0 64 64"><path d="M25 8c-3 0-5 2.2-5 5v20.5l-3.2-3.1c-2.1-2-5.4-1.9-7.2.4-1.5 1.9-1.4 4.6.2 6.4l12.6 14.2c2.6 3 6.3 4.6 10.2 4.6H40c7.2 0 13-5.8 13-13V30.5c0-2.8-2.2-5-5-5-1 0-1.9.3-2.7.8-.6-2.3-2.7-3.9-5.1-3.9-1.2 0-2.3.4-3.2 1.1-.8-2-2.7-3.3-5-3.3-.7 0-1.4.1-2 .4V13c0-2.8-2.2-5-5-5z" fill="#fff" stroke="#2C3445" stroke-width="3" stroke-linejoin="round"/>' +
     '<path d="M35.6 26v9M45 27.5V36M30 25v10" stroke="#2C3445" stroke-width="2.6" stroke-linecap="round"/></svg></div>');
@@ -205,7 +214,7 @@
     clearTimeout(msgTimer);
     msgEl.classList.remove('show', 'bad', 'good');
     void msgEl.offsetWidth;
-    msgEl.innerHTML = text || '';
+    msgEl.innerHTML = text ? (opts.tone === 'tut' || opts.tone === 'hint' ? '<span>' + text + '</span>' : text) : '';
     if (text) {
       msgEl.classList.add('show');
       if (opts.tone) msgEl.classList.add(opts.tone);
@@ -227,7 +236,7 @@
       msgEl.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 166) + 'px;width:' + colW + 'px;transform:none;justify-content:flex-start;text-align:left;height:auto;min-height:40px';
     } else {
       lab.style.cssText = 'left:50%;top:' + (sx.t + 8) + 'px;transform:translateX(-50%);width:' + Math.max(120, L.W - 2 * 96) + 'px';
-      msgEl.style.cssText = 'left:50%;top:' + (sx.t + 74) + 'px;transform:translateX(-50%);width:' + Math.min(L.W - 24, 560) + 'px';
+      msgEl.style.cssText = 'left:50%;top:' + (sx.t + 10 + (pause.offsetHeight || 60) + 6) + 'px;transform:translateX(-50%);width:' + Math.min(L.W - 24, 560) + 'px';
     }
     const bw = Math.min(Math.max(L.size, 280), 440, L.W - 16);
     bar.style.left = (L.x + L.size / 2 - bw / 2) + 'px';
@@ -259,6 +268,26 @@
       em.classList.toggle('plus', !(b[k] > 0));
     });
   }
+
+  // Reveal's line numbers: one badge left of every row and one above every column. Hovering a
+  // badge highlights its line, tapping it reveals that line. o: { n, x, y, size } in HUD px, or null.
+  const nums = game.querySelector('#gNums');
+  let numsKey = '';
+  function setLineNums(o) {
+    if (!o) { nums.hidden = true; numsKey = ''; return; }
+    const key = [o.n, o.x, o.y, o.size].map((v) => Math.round(v)).join(',');
+    nums.hidden = false;
+    if (key === numsKey) return;
+    numsKey = key;
+    const pad = o.size * 0.03, cs = (o.size - 2 * pad) / o.n, b = 26;
+    let html = '';
+    for (let r = 0; r < o.n; r++) html += '<button class="lnum" data-l="' + r + '" style="left:' + Math.max(2, o.x - b / 2 - 2) + 'px;top:' + (o.y + pad + (r + 0.5) * cs - b / 2) + 'px">' + (r + 1) + '</button>';
+    for (let c = 0; c < o.n; c++) html += '<button class="lnum" data-l="' + (o.n + c) + '" style="left:' + (o.x + pad + (c + 0.5) * cs - b / 2) + 'px;top:' + (o.y - b / 2 - 4) + 'px">' + (c + 1) + '</button>';
+    nums.innerHTML = html;
+  }
+  nums.addEventListener('pointerover', (e) => { const b = e.target.closest('.lnum'); if (b) OP.game.hoverLine(+b.dataset.l); });
+  nums.addEventListener('pointerout', (e) => { if (e.target.closest('.lnum')) OP.game.hoverLine(null); });
+  nums.addEventListener('click', (e) => { const b = e.target.closest('.lnum'); if (b) OP.game.revealLine(+b.dataset.l); });
 
   const hand = game.querySelector('#gHand');
   function pointer(x, y) {
@@ -592,7 +621,7 @@
 
   OP.ui = {
     show, refresh, get current() { return current; },
-    msg, placeHud, setHud, setTimer, setBoosters, pointer,
+    msg, placeHud, setHud, setTimer, setBoosters, pointer, setLineNums,
     modal, modalOpen, openSettings, openPause, openHelp, openWin, maybeLogin, boosterAd,
     rewardedAd, adBreak, toast, fmtTime, dailyState, logoHtml, esc,
   };

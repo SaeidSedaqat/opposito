@@ -13,9 +13,9 @@
   let armed = null, adPaused = false;
   let dailyTimerId = null, dailyStart = 0;
   let prevGood = [];
-  const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [], focus: null };
+  const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [], focus: null, hover: [] };
   // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
-  const TUT_HELP = { 3: ['three'], 11: ['links'] }; // level 1 teaches by guided taps instead (see guide below)
+  const TUT_HELP = { 11: ['links'] }; // levels 1-10 open no How to Play popup (level 1 is the guided tutorial)
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -51,14 +51,15 @@
     const compact = w >= h * 1.15 && h < 640;
     // Real rendered height of the booster bar (icons grew in 0.1.108), plus a bottom margin so it never clips.
     const barEl = document.getElementById('gBar');
-    const bar = Math.max(84, (barEl && barEl.offsetHeight) || 0) + 16;
+    const bar = barEl && barEl.hidden ? 8 : Math.max(84, (barEl && barEl.offsetHeight) || 0) + 16;
     let x, y, size;
     if (compact) {
       size = clamp(h - 24 - bar - 12, 160, Math.min(h - 40, w * 0.62));
       x = w - size - 20;
       y = Math.max(12, (h - size - 12 - bar) / 2);
     } else {
-      const top = 72, msgH = 40; // room for the level label (50% bigger since 0.1.178)
+      // The message starts just under the pause button (its size differs by orientation), and the board under that.
+      const pe = document.getElementById('gPause'), top = 16 + 10 + ((pe && pe.offsetHeight) || 60) + 6, msgH = 56;
       size = clamp(Math.min(w - 32, h - top - msgH - bar - 24), 160, 620);
       x = (w - size) / 2;
       const blockH = size + 12 + bar;
@@ -80,6 +81,7 @@
     curL = Object.assign({}, v, { W: w, H: h, x: v.x * g, y: v.y * g, size: v.size * g, g, dpr: dprFor(w, h) });
     if (scene) scene.setLayout(curL);
     if (guideStep()) pointAtCell(guideStep().i); // keep the hand on its cell after a resize
+    syncNums();
   }
 
   // ---------- performance ----------
@@ -139,7 +141,7 @@
     if (st.v === 0) t = 'Each row needs as many ' + A + ' as ' + B + '.<br>Tap here to place ' + A + '!';
     else if (board[st.i] === 0) t = 'Tap again to turn it into ' + B + '.';
     else t = 'This row needs one more ' + B + '.<br>Tap twice: ' + A + ', then ' + B + '.';
-    OP.ui.msg(t);
+    OP.ui.msg(t, { tone: 'tut' });
     pointAtCell(st.i);
   }
   function pointAtCell(i) {
@@ -179,6 +181,7 @@
   }
 
   function begin(which, spec) {
+    clearHint();
     curSpec = spec; armed = null; prevGood = []; solved = false;
     clearTimeout(brokenTimer); fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     fx.focus = null; OP.ui.pointer(null);
@@ -201,7 +204,10 @@
       free: ['Free Play', C.DIFFS[spec.diff - 1] + ' · ' + spec.n + '×' + spec.n],
       daily: ['Daily', C.dateLabel(C.today()).replace(/^(\w{3})\w*/, '$1')], // "Nov 14, 2026": fits beside pause/timer on phones
     }[which];
-    OP.ui.setHud({ l1: labels[0], l2: labels[1], timer: which === 'daily', bar: true, gen: false });
+    // Levels 1-2 have no boosters at all (not even Undo); the board grows into the freed space.
+    const noBar = which === 'levels' && spec.level <= 2;
+    OP.ui.setHud({ l1: labels[0], l2: labels[1], timer: which === 'daily', bar: !noBar, gen: false });
+    if (curL) layout(curL.W, curL.H);
     if (which === 'daily') { OP.ui.setTimer(elapsed); startDailyTimer(); } else stopDailyTimer();
 
     prevGood = OP.Puzzle.goodLines(pz, board);
@@ -222,6 +228,7 @@
   // ---------- rendering helpers ----------
   let badTimer = null, brokenTimer = null;
   function afterPlace() {
+    if (activeHint && board[activeHint.i] === activeHint.v) clearHint(true); // the player followed the hint
     fx.broken = []; clearTimeout(brokenTimer);
     const newGood = OP.Puzzle.goodLines(pz, board);
     const added = newGood.filter((L) => prevGood.indexOf(L) < 0);
@@ -275,7 +282,7 @@
 
   function winLevel() {
     const spec = curSpec, diff = spec.diff;
-    const coins = spec.tut ? C.tutorialCoins : C.coins[diff];
+    const coins = C.levelReward(spec.n, diff); // same pay as Free Play: bigger and harder boards pay more
     let bonus = null;
     if (Math.random() < C.drop[diff]) {
       const pool = spec.n >= 8 ? ['hint', 'check', 'reveal'] : ['hint', 'check'];
@@ -333,7 +340,7 @@
   }
 
   // ---------- boosters ----------
-  function updateBoosterUI() { OP.ui.setBoosters({ reveal: !!(pz && pz.n >= 8), armed, undo: hist.length > 0, off: mode === 'daily' }); }
+  function updateBoosterUI() { OP.ui.setBoosters({ reveal: !!(pz && pz.n >= 8), armed, undo: hist.length > 0, off: mode === 'daily' }); if (!armed) setHover(null); syncNums(); }
   function doUndo() {
     if (!hist.length) return;
     const last = hist.pop();
@@ -354,11 +361,30 @@
     if (B.hint <= 0) { OP.ui.boosterAd('hint', pz.n >= 8, updateBoosterUI); return; }
     const step = OP.Puzzle.nextStep(pz, board);
     if (!step) return;
-    B.hint--; OP.save.soon(); OP.audio.play('hint');
-    flashEvidence(evidenceFor(step), 2200);
-    applyPlacement(step.i, step.v, board[step.i]);
-    OP.ui.msg(stepText(step), { ms: 2600 });
+    // Same hint still showing (nothing changed since): just show it again, free.
+    const same = activeHint && activeHint.i === step.i && activeHint.v === step.v;
+    if (!same) { B.hint--; OP.save.soon(); }
+    OP.audio.play('hint');
+    showHint(step);
     updateBoosterUI();
+  }
+  // A hint only points: it rings the cell and tints the cells/line that explain it, and its
+  // sentence stays up for 15 s -- or until the player places that piece or asks for another hint.
+  let activeHint = null, hintTimer = null;
+  function showHint(step) {
+    clearHint();
+    activeHint = { i: step.i, v: step.v };
+    fx.hint = step.i; fx.evidence = evidenceFor(step);
+    if (scene) scene.applyFx();
+    OP.ui.msg(stepText(step), { tone: 'hint' });
+    hintTimer = setTimeout(() => clearHint(true), 15000);
+  }
+  function clearHint(withMsg) {
+    clearTimeout(hintTimer); hintTimer = null;
+    if (!activeHint) return;
+    activeHint = null; fx.hint = null; fx.evidence = [];
+    if (scene) scene.applyFx();
+    if (withMsg) OP.ui.msg('');
   }
   function flashEvidence(cells, ms) {
     fx.evidence = cells; if (scene) scene.applyFx();
@@ -379,25 +405,49 @@
     OP.audio.play('fire');
     afterPlace(); saveCur(); checkWinOrBroken();
   }
-  // Reveal: fills in the whole row or column through the tapped cell (whichever has more
-  // empties/wrong cells). No charge if that line is already fully correct.
-  function doReveal(i) {
-    const n = pz.n, r = (i / n) | 0, c = i % n, rowL = r, colL = n + c;
-    const P = OP.Puzzle.ctx(n, pz.links);
-    const scoreLine = (L) => { let s = 0; P.lc[L].forEach((ci) => { if (board[ci] < 0) s++; else if (board[ci] !== pz.sol[ci]) s++; }); return s; };
-    const rs = scoreLine(rowL), cs2 = scoreLine(colL);
-    if (rs === 0 && cs2 === 0) { OP.ui.msg('That line is already done', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
+  // Reveal: fills in a whole row or column. Tapping a cell picks the line through it that has
+  // more empty/wrong cells; tapping a line number picks that line. No charge if it is already right.
+  function lineScore(L) { const P = OP.Puzzle.ctx(pz.n, pz.links); let s = 0; P.lc[L].forEach((ci) => { if (board[ci] < 0 || board[ci] !== pz.sol[ci]) s++; }); return s; }
+  function lineFor(i) { const n = pz.n, r = (i / n) | 0, c = i % n; return lineScore(r) >= lineScore(n + c) ? r : n + c; }
+  function doReveal(i) { revealLine(lineFor(i)); }
+  function revealLine(L) {
+    if (!pz || solved || armed !== 'reveal') return;
+    if (lineScore(L) === 0) { OP.ui.msg('That line is already done', { ms: 1400 }); armed = null; updateBoosterUI(); return; }
     const B = S().boosters;
     if (B.reveal <= 0) { armed = null; updateBoosterUI(); OP.ui.boosterAd('reveal', false, updateBoosterUI); return; }
-    const L = rs >= cs2 ? rowL : colL;
+    const P = OP.Puzzle.ctx(pz.n, pz.links);
     P.lc[L].forEach((ci) => { if (pz.givens[ci] < 0 && board[ci] !== pz.sol[ci]) { pushHist(ci, board[ci], pz.sol[ci]); board[ci] = pz.sol[ci]; } });
     B.reveal--; OP.save.soon();
     armed = null; updateBoosterUI();
     OP.audio.play('line');
     afterPlace(); saveCur(); checkWinOrBroken();
   }
+  // While Check or Reveal is armed, the cell / line under the pointer is softly highlighted.
+  let hoverKey = '';
+  function setHover(cells) {
+    const key = cells ? cells.join(',') : '';
+    if (key === hoverKey) return;
+    hoverKey = key; fx.hover = cells || [];
+    if (scene) scene.applyFx();
+  }
+  function hoverCell(i) {
+    if (!pz || solved || i == null || i < 0 || !armed) return setHover(null);
+    if (armed === 'check') return setHover([i]);
+    setHover(OP.Puzzle.ctx(pz.n, pz.links).lc[lineFor(i)].slice());
+  }
+  function hoverLine(L) {
+    if (!pz || armed !== 'reveal' || L == null) return setHover(null);
+    setHover(OP.Puzzle.ctx(pz.n, pz.links).lc[L].slice());
+  }
+  // Line-number badges show only while Reveal is armed, placed around the board in HUD px.
+  function syncNums() {
+    if (!pz || !curL || armed !== 'reveal') { OP.ui.setLineNums(null); return; }
+    const g = curL.g || 1;
+    OP.ui.setLineNums({ n: pz.n, x: curL.x / g, y: curL.y / g, size: curL.size / g });
+  }
   function booster(k) {
     if (!pz || solved || adPaused || OP.ui.modalOpen()) return;
+    if (mode === 'levels' && curSpec && curSpec.level <= 2) return;
     if (guideStep()) { OP.ui.msg('Follow the hand first!', { ms: 1400, after: showGuide }); return; }
     if (k === 'undo') return doUndo();
     if (mode === 'daily') { OP.ui.msg('No boosters in the Daily', { ms: 1400 }); return; }
@@ -418,6 +468,7 @@
   // ---------- pause / restart / screens ----------
   function restartCurrent() {
     if (!pz) return;
+    clearHint(true);
     board = Array.from(pz.givens); hist = [];
     prevGood = []; fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     armed = null; clearTimeout(badTimer);
@@ -495,23 +546,26 @@
       this.time.addEvent = (c) => { kick((c.delay || 0) * ((c.repeat || 0) + 1)); return eAdd(c); };
       this.game.canvas.addEventListener('pointerdown', () => kick(), true);
       this.input.on('pointerdown', (p) => this._onTap(p));
+      this.input.on('pointermove', (p) => hoverCell(this.cellAt(p)));
+      this.input.on('gameout', () => hoverCell(null));
       scene = this; if (curL) scene.setLayout(curL);
       kick();
     }
     update() {
       if (performance.now() > idleUntil && this.tweens.getTweens().length === 0) this.game.loop.sleep();
     }
-    _onTap(p) {
-      const L = this.L; if (!L || !pz) return;
+    cellAt(p) {
+      const L = this.L; if (!L || !pz) return -1;
       const dpr = this.dpr, n = pz.n;
       const pad = L.size * 0.03, cs = (L.size - 2 * pad) / n;
       const ox = L.x * dpr, oy = L.y * dpr, P = pad * dpr, CS = cs * dpr, Sz = L.size * dpr;
       const x = p.x, y = p.y;
-      if (x < ox + P || y < oy + P || x > ox + Sz - P || y > oy + Sz - P) return;
+      if (x < ox + P || y < oy + P || x > ox + Sz - P || y > oy + Sz - P) return -1;
       const c = Math.floor((x - ox - P) / CS), r = Math.floor((y - oy - P) / CS);
-      if (r < 0 || r >= n || c < 0 || c >= n) return;
-      tap(r * n + c);
+      if (r < 0 || r >= n || c < 0 || c >= n) return -1;
+      return r * n + c;
     }
+    _onTap(p) { const i = this.cellAt(p); if (i >= 0) tap(i); }
     setLayout(L) { this.L = L; if (L.dpr) this.dpr = L.dpr; this.redraw(); kick(); }
     ensureCells(n) {
       if (this.n === n) return;
@@ -612,6 +666,13 @@
         this.gFx.fillStyle(0x3fa4e8, 0.16); this.gFx.fillRoundedRect.apply(this.gFx, r.concat([6 * dpr]));
         this.gFx.lineStyle(2 * dpr, 0x3fa4e8, 0.6); this.gFx.strokeRoundedRect.apply(this.gFx, r.concat([6 * dpr]));
       });
+      if ((fx.hover || []).length) {
+        // Check / Reveal aiming: soft tint on the cell or line under the pointer, ringed as one block.
+        fx.hover.forEach((i) => { this.gFx.fillStyle(0x3fa4e8, 0.14); this.gFx.fillRoundedRect.apply(this.gFx, rectFor(i).concat([6 * dpr])); });
+        const a = rectFor(Math.min.apply(null, fx.hover)), b = rectFor(Math.max.apply(null, fx.hover)), m = 2 * dpr;
+        this.gFx.lineStyle(3 * dpr, 0x3fa4e8, 0.85);
+        this.gFx.strokeRoundedRect(a[0] - m, a[1] - m, b[0] + b[2] - a[0] + 2 * m, b[1] + b[3] - a[1] + 2 * m, 9 * dpr);
+      }
       let P2 = null;
       if ((fx.glowLines || []).length) P2 = OP.Puzzle.ctx(n, pz.links);
       (fx.glowLines || []).forEach((L2) => { P2.lc[L2].forEach((i) => { this.gFx.lineStyle(3 * dpr, 0xffd27a, 0.95); this.gFx.strokeRoundedRect.apply(this.gFx, rectFor(i).concat([6 * dpr])); }); });
@@ -707,5 +768,5 @@
     }
   }
 
-  OP.game = { start, pause, booster, onScreen, refreshMarks, clearCache, adPause, layout, dprFor, Scene: BoardScene, devSolve, devInfo };
+  OP.game = { start, pause, booster, hoverLine, revealLine, onScreen, refreshMarks, clearCache, adPause, layout, dprFor, Scene: BoardScene, devSolve, devInfo };
 })();

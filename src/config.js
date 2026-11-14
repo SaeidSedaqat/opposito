@@ -28,7 +28,7 @@
     else if (L === 2) s = { n: 4, diff: 1, links: false, fixed: FIXED[2] };
     else if (L === 3) s = { n: 4, diff: 1, links: false, tut: 3, extra: 3 };
     else if (L <= 5) s = { n: 4, diff: 1, links: false, extra: 1 };
-    else if (L <= 10) s = { n: 6, diff: 1, links: false };
+    else if (L <= 10) s = { n: 6, diff: 1, links: false, extra: [9, 7, 6, 5, 4][L - 6] }; // first 6x6 boards start with extra givens, easing off each level
     else if (L === 11) s = { n: 6, diff: 1, links: true, tut: 11, require: 'link' };
     else if (L <= 15) s = { n: 6, diff: 1, links: true };
     else if (L <= 20) s = { n: 6, diff: 2, links: true };
@@ -80,7 +80,7 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.189',
+    VERSION: '0.1.199',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)
@@ -96,6 +96,8 @@
       { coins: 100 }, { coins: 150 }, { skin: 'swordshield' },
     ],
     freeReward(n, diff) { const r = this.freeCoins[n]; return (r && r[diff - 1]) || 0; },
+    // Levels pay the Free Play rate; combos Free Play doesn't offer (6x6 Hard, 8x8 Expert) get +5 per extra step.
+    levelReward(n, diff) { const r = this.freeCoins[n] || [10]; return diff <= r.length ? r[diff - 1] : r[r.length - 1] + 5 * (diff - r.length); },
     levelSpec, dailySpec, today, dayKeyOffset, dateLabel,
   };
 })();
