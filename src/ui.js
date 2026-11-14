@@ -416,7 +416,7 @@
   function exLink(valid, same) {
     const sk = OP.skins.get(S().skin);
     const img = (v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>';
-    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + img(0) + '<span class="ex-link' + (same ? ' same">=' : '">×') + '</span>' + img(valid !== !!same ? 1 : 0) +
+    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + '<span class="ex-pair">' + img(0) + img(valid !== !!same ? 1 : 0) + '<b class="ex-link">' + (same ? '=' : '×') + '</b></span>' +
       '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
   }
   function exGrid(rows, valid) {
