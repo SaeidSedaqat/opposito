@@ -70,7 +70,7 @@
     '<div class="menu">' +
     '<button class="btn primary big play" id="hLevels">' + ic('play-white') + '<span class="t" id="hLevelN">Level 1</span></button>' +
     '<button class="btn big play" id="hFree">' + ic('play') + '<span class="t">Free Play</span></button>' +
-    '<button class="btn big daily play" id="hDaily">' + ic('play-white') + '<span class="t">Daily</span><span class="s" id="hDailyS"></span></button>' +
+    '<button class="btn big daily play" id="hDaily">' + ic('play-white') + '<span class="t">Daily Play</span><span class="s" id="hDailyS"></span></button>' +
     '</div></div>' +
     '<div class="footrow">' +
     '<button class="btn foot" id="hSet" aria-label="Settings">' + ic('gear') + '</button>' +
@@ -93,9 +93,8 @@
     const ds = dailyState();
     const b = home.querySelector('#hDaily');
     b.disabled = !!ds.solved;
-    // The streak line only appears once there is a real streak (2+ days); a solved Daily still shows its time.
+    // No streak shown; a solved Daily shows its time.
     const parts = [];
-    if (ds.streak >= 2) parts.push(flame() + ds.streak + ' day streak');
     if (ds.solved) parts.push('Solved in ' + fmtTime(ds.solved.time));
     const sEl = home.querySelector('#hDailyS');
     sEl.innerHTML = parts.join(' · ');
@@ -499,7 +498,7 @@
       body = (o.coins ? '<div class="reward">' + ic('coin') + '<b id="wCoins">+' + o.coins + '</b></div><button class="btn gold dbl" id="wDouble" aria-label="Double coins">' + ic('ad') + 'x2' + ic('coin') + '</button>' : '<p class="sub">' + esc(o.label) + '</p>') +
         '<div class="row2"><button class="btn" id="wHome">Home</button><button class="btn primary" id="wNext">Next</button></div>';
     } else {
-      body = '<div class="stats"><div><span>Time</span><b>' + fmtTime(o.time) + '</b></div><div><span>Streak</span><b>' + flame() + o.streak + '</b></div></div>' +
+      body = '<div class="stats"><div><span>Time</span><b>' + fmtTime(o.time) + '</b></div></div>' +
         '<button class="btn primary" id="wHome">Home</button>';
     }
     const m = modal('<div class="panel win"><h2 class="solved">' + WIN_WORDS[Math.floor(Math.random() * WIN_WORDS.length)] + '</h2>' + body + '</div>', { dismiss: false, silent: true });
