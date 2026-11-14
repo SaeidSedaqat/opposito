@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.174') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.174') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.175') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.175') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -39,9 +39,9 @@ img{display:block; max-width:100%;}
 #loading{position:fixed; inset:0; z-index:50; background:linear-gradient(135deg,#FFF3EA,#EAF5FD);
   display:flex; align-items:center; justify-content:center; transition:opacity .45s ease;}
 #loading.done{opacity:0; pointer-events:none;}
-.lwrap{width:min(320px,80vw); text-align:center;}
-.llogo{font-size:clamp(24px,7vw,30px); font-weight:800; margin-bottom:26px; display:flex; align-items:center; justify-content:center; gap:8px;}
-.llogo img{width:40px; height:40px;}
+.lwrap{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(320px,80vw); text-align:center;}
+.lmenu{position:relative;}
+.lmenu > .btn, .lfoot > .btn{visibility:hidden;}
 .ltrack{height:10px; border-radius:6px; background:#fff; box-shadow:inset 0 0 0 1px var(--line); overflow:hidden;}
 #lbar{height:100%; width:0%; background:linear-gradient(90deg,var(--fire),var(--ice)); transition:width .25s ease;}
 #lpct{margin-top:10px; font-size:13px; color:var(--sub); font-weight:700;}
@@ -107,6 +107,7 @@ img{display:block; max-width:100%;}
 .homemid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8vh; min-height:0;}
 .logo.big{display:flex; align-items:center; gap:10px;}
 .logo.big .logoart{width:min(330px,88vw); height:auto; pointer-events:none;}
+@media (orientation:landscape){ .logo.big .logoart{width:min(462px,60vw,61vh);} } /* 40% bigger on wide screens, capped so short landscape phones still fit */
 .logo.big .word{font-size:clamp(30px,9vw,44px); font-weight:800; letter-spacing:-.5px;}
 .menu{width:min(340px,86vw); display:flex; flex-direction:column; gap:14px;}
 .footrow{width:min(290px,76vw); margin:0 auto; display:flex; gap:30px; flex:none;}
@@ -324,12 +325,15 @@ img{display:block; max-width:100%;}
 </head>
 <body>
 <div id="loading">
-  <div class="lwrap">
-    <div class="llogo"><span>Opposito</span></div>
-    <div class="ltrack"><div id="lbar"></div></div>
-    <div id="lpct">0%</div>
-    <div id="lerr" hidden>Could not load. Check your connection and reload.</div>
-  </div>
+  <!-- Same layout as the Home screen (invisible stand-ins for its buttons) so the logo sits exactly where Home shows it. -->
+  <div class="homebody"><div class="homemid"><div class="logo big"><img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=0.1.175"></div>
+    <div class="menu lmenu"><div class="btn big"></div><div class="btn big"></div><div class="btn big"></div>
+      <div class="lwrap">
+        <div class="ltrack"><div id="lbar"></div></div>
+        <div id="lpct">0%</div>
+        <div id="lerr" hidden>Could not load. Check your connection and reload.</div>
+      </div></div></div>
+    <div class="footrow lfoot"><div class="btn foot"><i class="ico"></i></div><div class="btn foot"><i class="ico"></i></div></div></div>
 </div>
 <div id="game"></div>
 <div id="ui"></div>
@@ -337,7 +341,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.174';
+  var V = '0.1.175';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3888],
