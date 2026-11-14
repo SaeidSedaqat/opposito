@@ -100,7 +100,7 @@
   home.querySelector('#hFree').onclick = () => openFree();
   home.querySelector('#hDaily').onclick = () => { const s = dailyState().solved; if (s) dailyDone(s); else OP.game.start('daily'); };
   function dailyDone(s) {
-    modal('<div class="panel small daydone"><h2>Daily Play solved!</h2><div class="stats"><div><span>Best time</span><b>' + fmtTime(s.time) + '</b></div></div>' +
+    modal('<div class="panel small daydone"><h2>Daily Play solved!</h2><div class="stats"><div><span>Time</span><b>' + fmtTime(s.time) + '</b></div></div>' +
       '<p>Come back tomorrow for a new puzzle.</p><button class="btn primary" data-x="close">OK</button></div>');
   }
 
