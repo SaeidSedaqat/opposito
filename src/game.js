@@ -9,7 +9,7 @@
 
   // ---------- module state ----------
   let scene = null, curL = null;
-  let mode = null, curSpec = null, pz = null, board = null, hist = [], elapsed = 0;
+  let mode = null, curSpec = null, pz = null, board = null, hist = [], elapsed = 0, solved = false;
   let armed = null, adPaused = false;
   let dailyTimerId = null, dailyStart = 0;
   let prevGood = [];
@@ -126,7 +126,7 @@
   }
 
   function begin(which, spec) {
-    curSpec = spec; armed = null; prevGood = [];
+    curSpec = spec; armed = null; prevGood = []; solved = false;
     clearTimeout(brokenTimer); fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     const saved = curObj()[which];
     if (saved && saved.spec && saved.spec.seed === spec.seed) {
@@ -197,6 +197,7 @@
     if (!isFull(board)) return;
     const v = OP.Puzzle.violations(pz, board);
     if (v.cells.size === 0) {
+      solved = true; armed = null; // lock the board: taps during the win celebration must not change it
       if (mode === 'daily') stopDailyTimer(); // freeze the clock at the exact solve moment
       OP.audio.play('win');
       if (scene) scene.winRipple();
@@ -265,7 +266,7 @@
   }
 
   function tap(i) {
-    if (adPaused || OP.ui.modalOpen() || !pz) return;
+    if (adPaused || OP.ui.modalOpen() || !pz || solved) return;
     if (armed === 'check') { doCheck(i); return; }
     if (armed === 'reveal') { doReveal(i); return; }
     if (pz.givens[i] >= 0) { if (scene) scene.shakeCell(i); return; }
@@ -338,7 +339,7 @@
     afterPlace(); saveCur(); checkWinOrBroken();
   }
   function booster(k) {
-    if (!pz || adPaused || OP.ui.modalOpen()) return;
+    if (!pz || solved || adPaused || OP.ui.modalOpen()) return;
     if (k === 'undo') return doUndo();
     if (mode === 'daily') { OP.ui.msg('No boosters in the Daily', { ms: 1400 }); return; }
     if (k === 'hint') return doHint();
