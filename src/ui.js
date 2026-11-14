@@ -161,7 +161,12 @@
     }).join('');
   };
   shop.querySelector('#sBack').onclick = () => show('home');
-  shop.querySelector('#sCards').onclick = (e) => { const b = e.target.closest('.card'); if (b) skinPreview(OP.skins.get(b.dataset.id)); };
+  shop.querySelector('#sCards').onclick = (e) => { const b = e.target.closest('.card'); if (b) cardTap(OP.skins.get(b.dataset.id)); };
+  function cardTap(sk) {
+    const st = skinState(sk);
+    if (st.k === 'locked' && sk.unlock.type === 'login') loginModal(true);
+    else skinAction(sk);
+  }
 
   function skinAction(sk, after) {
     const d = S(), st = skinState(sk);
@@ -174,20 +179,6 @@
     OP.save.persist();
     renderers.shop();
     if (after) after();
-  }
-
-  function skinPreview(sk) {
-    const m = modal('<div class="panel preview-skin"><h2>' + esc(sk.name) + '</h2>' + miniBoard(sk, 4) +
-      '<div class="pair"><span><img alt="" src="' + OP.skins.dataUri(sk.pa, 64) + '">' + esc(sk.an) + '</span><span><img alt="" src="' + OP.skins.dataUri(sk.pb, 64) + '">' + esc(sk.bn) + '</span></div>' +
-      '<div class="row2"><button class="btn" data-x="close">Close</button><button class="btn primary act"></button></div></div>');
-    const act = m.querySelector('.act');
-    const paint = () => {
-      const st = skinState(sk);
-      act.innerHTML = st.long || st.html; act.className = 'btn act ' + (st.k === 'equipped' || st.k === 'locked' || st.k === 'poor' ? 'flat' : 'primary');
-      act.disabled = st.k === 'equipped' || st.k === 'locked';
-    };
-    paint();
-    act.onclick = () => skinAction(sk, paint);
   }
 
   // ---------- Game HUD ----------
@@ -413,11 +404,18 @@
     // Rewards were reshuffled in 0.1.144: hand over any skin from a day this player already claimed.
     C.login.slice(0, L.day).forEach((r) => { if (r.skin && S().owned.indexOf(r.skin) < 0) S().owned.push(r.skin); });
     if (L.day >= 7 || L.last === t.key) return false;
+    loginModal(false);
+    return true;
+  }
+  // The 7-day track. preview=true is the read-only look from the shop (Close instead of Claim).
+  function loginModal(preview) {
+    const L = S().login, t = C.today();
     const m = modal('<div class="panel login"><h2>Daily reward</h2><div class="days">' +
       C.login.map((r, k) => {
         const rw = loginReward(r), cls = k < L.day ? 'got' : (k === L.day ? 'now' : '');
         return '<div class="day ' + cls + (k === 6 ? ' wide' : '') + '"><span class="dn">Day ' + (k + 1) + '</span><span class="di' + (rw.two ? ' two' : '') + '">' + rw.icon + '</span><span class="dt">' + esc(rw.text) + '</span>' + (k < L.day ? '<span class="ok">' + ic('tick') + '</span>' : '') + '</div>';
-      }).join('') + '</div><button class="btn primary big" id="lClaim">Claim</button></div>', { dismiss: false, silent: true });
+      }).join('') + '' + (preview ? '</div><button class="btn big" data-x="close">Close</button></div>' : '</div><button class="btn primary big" id="lClaim">Claim</button></div>'), { dismiss: preview, silent: !preview });
+    if (preview) return;
     OP.audio.play('daily', 0.9);
     m.querySelector('#lClaim').onclick = () => {
       const d = S(), r = C.login[d.login.day];

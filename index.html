@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.163') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.163') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.164') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.164') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -134,14 +134,15 @@ img{display:block; max-width:100%;}
 .mini i{display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); border-radius:4px;}
 .mini i img{width:78%; height:78%;}
 .nm{font-size:12.5px; font-weight:800; text-align:center; line-height:1.2;}
-.st{display:flex; align-items:center; justify-content:center; gap:4px; white-space:nowrap; max-width:100%; box-sizing:border-box; font-size:15px; font-weight:800; padding:5px 7px; border-radius:12px; color:var(--sub); background:#EEF1F6;}
+.st{display:flex; align-items:center; justify-content:center; gap:4px; white-space:nowrap; max-width:100%; box-sizing:border-box; font-size:min(20px,15.5cqw); font-weight:900; padding:.4em .45em; border-radius:14px; color:var(--sub); background:#EEF1F6;}
 .st .ico{width:1.15em; height:1.15em;}
 .card.equipped .st{background:#E7F7EE; color:var(--good);}
 .card.equip .st{background:#EAF5FD; color:var(--ice);}
 .card.buy .st{background:#FFF6E3; color:#B8790E;}
+.card.buy .st, .card.poor .st{font-size:min(21px,19cqw); padding:.35em .7em;}
 .card.ad .st{background:#F3EBFF; color:#7A4FD1;}
 .card.poor .st{background:#F1F2F5; color:#9AA2AE;}
-.card.locked .st{background:#F1F2F5; color:#9AA2AE;}
+.card.locked .st{background:#F1F2F5; color:#9AA2AE; font-size:min(20px,15.5cqw); padding:.4em .45em;}
 
 /* ---------- game HUD ---------- */
 .screen[data-name="game"]{overflow:hidden; pointer-events:none;}
@@ -183,7 +184,7 @@ img{display:block; max-width:100%;}
 .modal{position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s ease; padding:20px;}
 .modal.on{opacity:1; pointer-events:auto;}
 .scrim{position:absolute; inset:0; background:rgba(20,24,36,.45);}
-.panel{position:relative; width:min(380px,100%); max-height:86vh; overflow:auto; background:var(--panel); border-radius:22px; padding:26px 22px 22px;
+.panel{position:relative; width:min(380px,100%); max-height:86vh; overflow:auto; background:#FFF7E8; border-radius:22px; padding:26px 22px 22px;
   display:flex; flex-direction:column; gap:12px; box-shadow:0 20px 50px rgba(20,24,36,.3); transform:scale(.94); transition:transform .2s ease;}
 .modal.on .panel{transform:scale(1);}
 .panel h2{margin:0 0 4px; font-size:19px; font-weight:800; text-align:center;}
@@ -204,14 +205,10 @@ img{display:block; max-width:100%;}
 .row2{display:flex; gap:10px;}
 .row2 .btn{flex:1; min-width:0; white-space:nowrap; font-size:17px; border-left-width:14px; border-right-width:14px; gap:6px;}
 .row2 .btn .ico{width:24px; height:24px;}
-.preview-skin .row2{align-self:stretch;}
-.preview-skin .row2 .act{flex:1.6;}
 .row2 .btn.flat{border-left-width:0; border-right-width:0; padding:0;}
 .sub{font-size:13.5px; color:var(--sub); text-align:center; margin:-4px 0 4px;}
 .credit{text-align:center; font-size:12.5px; font-weight:700; color:var(--sub); margin-top:6px;}
 .credit small{display:block; font-weight:700; opacity:.6; margin-top:2px;}
-.preview-skin{align-items:center; text-align:center;}
-.preview-skin .mini{width:70%; margin:0 auto;}
 .pair{display:flex; gap:16px; justify-content:center; margin:4px 0;}
 .pair span{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--sub);}
 .pair img{width:46px; height:46px;}
@@ -241,7 +238,7 @@ img{display:block; max-width:100%;}
 .panel.login h2{font-size:27px;}
 #lClaim{font-size:29px;}
 .days{display:grid; grid-template-columns:1fr 1fr; gap:8px;}
-.day{display:flex; flex-direction:column; align-items:center; gap:4px; background:#F3F5F9; border-radius:14px; padding:10px 8px; position:relative;}
+.day{display:flex; flex-direction:column; align-items:center; gap:4px; background:#F7EBD5; border-radius:14px; padding:10px 8px; position:relative;}
 .day.wide{grid-column:1/3; flex-direction:row; justify-content:center; gap:10px;}
 .day.now{background:linear-gradient(135deg,var(--fire),var(--ice)); color:#fff;}
 .day.got{opacity:.55;}
@@ -257,7 +254,7 @@ img{display:block; max-width:100%;}
 
 /* ---------- booster ad choices ---------- */
 .choices{display:flex; gap:8px;}
-.choice{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 6px; border-radius:14px; background:#F3F5F9; transition:transform .12s ease,background .15s;}
+.choice{flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 6px; border-radius:14px; background:#F7EBD5; transition:transform .12s ease,background .15s;}
 .choice:active{transform:scale(.95);}
 .choice.on{background:linear-gradient(135deg,var(--fire),var(--ice)); color:#fff;}
 .choice b{font-size:15px; font-weight:800;}
@@ -320,7 +317,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.163';
+  var V = '0.1.164';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3888],
@@ -328,7 +325,7 @@ img{display:block; max-width:100%;}
     ['src/skins.js', 12518],
     ['src/audio.js', 2791],
     ['src/puzzle.js', 15600],
-    ['src/ui.js', 35872],
+    ['src/ui.js', 35500],
     ['src/game.js', 29991],
     ['src/main.js', 4641]
   ];
