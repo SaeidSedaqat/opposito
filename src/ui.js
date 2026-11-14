@@ -144,7 +144,7 @@
     const u = sk.unlock;
     if (u.type === 'coins') return { k: d.coins >= u.price ? 'buy' : 'poor', html: ic('coin') + u.price };
     if (u.type === 'ad') return { k: 'ad', html: ic('ad') + 'Watch ad' };
-    if (u.type === 'login') return { k: 'locked', html: ic('lock') + 'Day ' + u.day + ' login' };
+    if (u.type === 'login') return { k: 'locked', html: ic('lock') + 'Day ' + u.day, long: ic('lock') + 'Day ' + u.day + ' login' };
     return { k: 'locked', html: '' };
   }
   renderers.shop = function () {
@@ -178,7 +178,7 @@
     const act = m.querySelector('.act');
     const paint = () => {
       const st = skinState(sk);
-      act.innerHTML = st.html; act.className = 'btn act ' + (st.k === 'equipped' || st.k === 'locked' || st.k === 'poor' ? 'flat' : 'primary');
+      act.innerHTML = st.long || st.html; act.className = 'btn act ' + (st.k === 'equipped' || st.k === 'locked' || st.k === 'poor' ? 'flat' : 'primary');
       act.disabled = st.k === 'equipped' || st.k === 'locked';
     };
     paint();
