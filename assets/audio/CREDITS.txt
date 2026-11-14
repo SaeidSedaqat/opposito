@@ -1,12 +1,10 @@
-Opposito audio credits. Every file here is CC0 (public domain); credit is optional but given anyway.
+Opposito audio credits. Everything here is CC0 (public domain); credit is optional but given anyway.
 
 music.mp3   "Happy Lullaby (song17)" by cynicmusic, CC0
             https://opengameart.org/content/happy-lullaby-song17
-All sound effects: "Interface Sounds" by Kenney (www.kenney.nl), CC0
-            https://kenney.nl/assets/interface-sounds  (mirror: https://opengameart.org/content/interface-sounds)
-            click=click_002, fire=pluck_001, ice=glass_002, clear=tick_002, line=pluck_002,
-            wrong=error_004, win=confirmation_003, coin=bong_001, hint=question_001,
-            undo=back_002, open=open_002, close=close_002, reward=maximize_006
+click.mp3, reward.mp3: "Interface Sounds" by Kenney (www.kenney.nl), CC0
+            https://kenney.nl/assets/interface-sounds  (click=click_002, reward=maximize_006)
+All other sound effects (open, close, fire, ice, clear, line, wrong, undo, hint, win, coin, daily)
+            were synthesized for Opposito with ffmpeg (soft sine tones), CC0.
 
-Files were re-encoded to MP3 for browser compatibility.
-daily.mp3  synthesized for Opposito (soft C-E-G-C chime), CC0
+Files were encoded as MP3 for browser compatibility.
