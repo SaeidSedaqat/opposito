@@ -125,7 +125,7 @@
 
   function begin(which, spec) {
     curSpec = spec; armed = null; prevGood = [];
-    fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
+    clearTimeout(brokenTimer); fx.bad = []; fx.glowLines = []; fx.broken = []; fx.hint = null; fx.evidence = [];
     const saved = curObj()[which];
     if (saved && saved.spec && saved.spec.seed === spec.seed) {
       pz = saved.pz; board = saved.board.slice(); hist = saved.hist || []; elapsed = saved.elapsed || 0;
@@ -164,9 +164,9 @@
   }
 
   // ---------- rendering helpers ----------
-  let badTimer = null;
+  let badTimer = null, brokenTimer = null;
   function afterPlace() {
-    fx.broken = [];
+    fx.broken = []; clearTimeout(brokenTimer);
     const newGood = OP.Puzzle.goodLines(pz, board);
     const added = newGood.filter((L) => prevGood.indexOf(L) < 0);
     prevGood = newGood;
@@ -201,9 +201,16 @@
       setTimeout(win, 2000); // let the player enjoy the finished board before the modal covers it
     }
     else {
-      fx.broken = Array.from(v.cells);
-      if (scene) scene.applyFx();
-      OP.ui.msg('Not quite right yet', { tone: 'bad', ms: 1600 });
+      // Same beat as the auto-highlight: let the last tile land before calling the board wrong.
+      clearTimeout(brokenTimer);
+      brokenTimer = setTimeout(() => {
+        if (!isFull(board)) return;
+        const v2 = OP.Puzzle.violations(pz, board);
+        if (v2.cells.size === 0) return;
+        fx.broken = Array.from(v2.cells);
+        if (scene) scene.applyFx();
+        OP.ui.msg('Not quite right yet', { tone: 'bad', ms: 1600 });
+      }, 500);
     }
   }
   function win() { if (mode === 'levels') winLevel(); else if (mode === 'free') winFree(); else if (mode === 'daily') winDaily(); }
