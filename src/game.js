@@ -104,7 +104,12 @@
   // ---------- spec builders ----------
   function buildSpec(which) {
     if (which === 'levels') { const L = S().level; const s = C.levelSpec(L); s.level = L; return s; }
-    if (which === 'free') { const f = S().free; const count = f.count || 0; return { n: f.n, diff: f.diff, links: f.links, seed: 'free-' + count }; }
+    if (which === 'free') {
+      const f = S().free;
+      f.count = (f.count || 0) + 1; // every Play press is a fresh seed, so two free puzzles are never the same
+      OP.save.soon();
+      return { n: f.n, diff: f.diff, links: f.diff >= 2, seed: 'free-' + f.count };
+    }
     const t = C.today(); const s = C.dailySpec(t); s.key = t.key; return s;
   }
 
@@ -220,7 +225,6 @@
     OP.ui.openWin({ mode: 'levels', coins, bonus, next: () => start('levels'), home: () => OP.ui.show('home') });
   }
   function winFree() {
-    S().free.count = (S().free.count || 0) + 1;
     curObj().free = null;
     OP.save.persist();
     OP.ui.openWin({ mode: 'free', label: 'Nice work!', next: () => start('free'), home: () => OP.ui.show('home') });

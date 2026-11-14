@@ -107,7 +107,6 @@
     '<div class="freebody">' +
     '<div class="lbl">Size</div><div class="pills" id="fSize"></div>' +
     '<div class="lbl">Difficulty</div><div class="pills" id="fDiff"></div>' +
-    '<div class="toggles"><label class="tg"><span>Melt links</span><input type="checkbox" id="fLinks"><b></b></label></div>' +
     '<div class="preview" id="fPrev"></div>' +
     '<button class="btn primary big play" id="fPlay">' + ic('play') + '<span class="t">Play</span></button>' +
     '</div>');
@@ -117,7 +116,6 @@
     if (f.n === 4) f.diff = 1;
     free.querySelector('#fSize').innerHTML = C.SIZES.map((n) => '<button class="pill' + (f.n === n ? ' on' : '') + '" data-n="' + n + '">' + n + '×' + n + '</button>').join('');
     free.querySelector('#fDiff').innerHTML = C.DIFFS.map((d, k) => '<button class="pill' + (f.diff === k + 1 ? ' on' : '') + '" data-d="' + (k + 1) + '"' + (f.n === 4 && k > 0 ? ' disabled' : '') + '>' + d + '</button>').join('');
-    free.querySelector('#fLinks').checked = f.links;
     const p = free.querySelector('#fPrev');
     p.style.setProperty('--n', f.n);
     let cells = '';
@@ -126,7 +124,6 @@
   };
   free.querySelector('#fSize').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S().free.n = +b.dataset.n; OP.save.soon(); renderers.free(); };
   free.querySelector('#fDiff').onclick = (e) => { const b = e.target.closest('button'); if (!b || b.disabled) return; S().free.diff = +b.dataset.d; OP.save.soon(); renderers.free(); };
-  free.querySelector('#fLinks').onchange = (e) => { S().free.links = e.target.checked; OP.audio.play('click'); OP.save.soon(); };
   free.querySelector('#fBack').onclick = () => show('home');
   free.querySelector('#fPlay').onclick = () => OP.game.start('free');
 

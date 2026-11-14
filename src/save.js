@@ -12,7 +12,7 @@
       owned: ['fireice'],
       boosters: { hint: 3, check: 2, reveal: 1 },
       settings: { sound: true, music: true, auto: true },
-      free: { n: 6, diff: 1, links: true, count: 0 },
+      free: { n: 6, diff: 1, count: 0 },
       daily: { streak: 0, last: null, solved: null, dates: [] }, // solved: { date, time }
       login: { day: 0, last: null },
       lastAdAt: 0,
