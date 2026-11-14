@@ -36,10 +36,10 @@
   document.addEventListener('visibilitychange', () => { if (!document.hidden) onResizeSoon(); });
 
   OP.game.layout(sz.w, sz.h);
-  // A brand-new player (still on level 1, never claimed a daily reward) goes straight into level 1.
-  // Their first daily reward then shows the first time they return Home.
+  // Until level 1 (the tutorial) is beaten, every load goes straight into it; Home (and the daily
+  // reward popup that opens there) only appears from level 2 on.
   const d = OP.save.d;
-  if (d.level === 1 && d.login.day === 0) OP.game.start('levels');
+  if (d.level === 1) OP.game.start('levels');
   else OP.ui.show('home'); // this alone triggers OP.game.onScreen('home'), which shows the login reward if due
 
   // ---------- dev mode: ?dev=1 ----------
