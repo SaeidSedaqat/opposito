@@ -9,3 +9,4 @@ All sound effects: "Interface Sounds" by Kenney (www.kenney.nl), CC0
             undo=back_002, open=open_002, close=close_002, reward=maximize_006
 
 Files were re-encoded to MP3 for browser compatibility.
+daily.mp3  synthesized for Opposito (soft C-E-G-C chime), CC0

@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   const OP = window.OP;
-  const NAMES = ['click', 'fire', 'ice', 'clear', 'line', 'wrong', 'win', 'coin', 'hint', 'undo', 'open', 'close', 'reward'];
+  const NAMES = ['click', 'fire', 'ice', 'clear', 'line', 'wrong', 'win', 'coin', 'hint', 'undo', 'open', 'close', 'reward', 'daily'];
   let ctx = null, master = null;
   const buf = {};
   let music = null, ducked = false, unlocked = false;

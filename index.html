@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.145') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.145') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.146') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.146') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -302,22 +302,22 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.145';
+  var V = '0.1.146';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3881],
     ['src/save.js', 2076],
     ['src/skins.js', 12518],
-    ['src/audio.js', 2670],
+    ['src/audio.js', 2679],
     ['src/puzzle.js', 15600],
-    ['src/ui.js', 32596],
+    ['src/ui.js', 32643],
     ['src/game.js', 27075],
     ['src/main.js', 4371]
   ];
   var SFX = [
     ['click', 669], ['fire', 1296], ['ice', 1505], ['clear', 669], ['line', 1923],
     ['wrong', 1296], ['win', 3177], ['coin', 1505], ['hint', 4431], ['undo', 1296],
-    ['open', 3177], ['close', 3177], ['reward', 3595]
+    ['open', 3177], ['close', 3177], ['reward', 3595], ['daily', 8193]
   ];
   var totalBytes = 0;
   FILES.forEach(function (f) { totalBytes += f[1]; });

@@ -411,7 +411,8 @@
       C.login.map((r, k) => {
         const rw = loginReward(r), cls = k < L.day ? 'got' : (k === L.day ? 'now' : '');
         return '<div class="day ' + cls + (k === 6 ? ' wide' : '') + '"><span class="dn">Day ' + (k + 1) + '</span><span class="di' + (rw.two ? ' two' : '') + '">' + rw.icon + '</span><span class="dt">' + esc(rw.text) + '</span>' + (k < L.day ? '<span class="ok">' + ic('tick') + '</span>' : '') + '</div>';
-      }).join('') + '</div><button class="btn primary big" id="lClaim">Claim</button></div>', { dismiss: false });
+      }).join('') + '</div><button class="btn primary big" id="lClaim">Claim</button></div>', { dismiss: false, silent: true });
+    OP.audio.play('daily', 0.9);
     m.querySelector('#lClaim').onclick = () => {
       const d = S(), r = C.login[d.login.day];
       d.login.day++; d.login.last = t.key;
