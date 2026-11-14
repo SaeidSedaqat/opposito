@@ -144,7 +144,7 @@
     const u = sk.unlock;
     if (u.type === 'coins') return { k: d.coins >= u.price ? 'buy' : 'poor', html: ic('coin') + u.price };
     if (u.type === 'ad') return { k: 'ad', html: ic('ad') + 'Watch ad', long: ic('ad-white') + 'Watch ad' };
-    if (u.type === 'login') return { k: 'locked', html: ic('lock') + 'Day ' + u.day, long: ic('lock') + 'Day ' + u.day + ' login' };
+    if (u.type === 'login') return { k: 'locked', html: 'Daily reward', long: ic('lock') + 'Day ' + u.day + ' reward' };
     return { k: 'locked', html: '' };
   }
   renderers.shop = function () {
@@ -404,8 +404,10 @@
   }
   function maybeLogin() {
     const L = S().login, t = C.today();
+    // Rewards were reshuffled in 0.1.144: hand over any skin from a day this player already claimed.
+    C.login.slice(0, L.day).forEach((r) => { if (r.skin && S().owned.indexOf(r.skin) < 0) S().owned.push(r.skin); });
     if (L.day >= 7 || L.last === t.key) return false;
-    const m = modal('<div class="panel login"><h2>Daily reward</h2><p class="sub">Come back on 7 different days for every gift.</p><div class="days">' +
+    const m = modal('<div class="panel login"><h2>Daily reward</h2><div class="days">' +
       C.login.map((r, k) => {
         const rw = loginReward(r), cls = k < L.day ? 'got' : (k === L.day ? 'now' : '');
         return '<div class="day ' + cls + (k === 6 ? ' wide' : '') + '"><span class="dn">Day ' + (k + 1) + '</span><span class="di">' + rw.icon + '</span><span class="dt">' + esc(rw.text) + '</span>' + (k < L.day ? '<span class="ok">' + ic('tick') + '</span>' : '') + '</div>';

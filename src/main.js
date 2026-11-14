@@ -51,6 +51,7 @@
       '<button id="devCoins">+1000c</button>' +
       '<button id="devBoost">+boost</button>' +
       '<button id="devAd">skip ad</button>' +
+      '<button id="devLogin">login</button>' +
       '<button id="devWipe">wipe</button>' +
       '</div>';
     document.body.appendChild(p);
@@ -66,6 +67,11 @@
     p.querySelector('#devCoins').onclick = () => { OP.save.d.coins += 1000; OP.save.persist(); OP.ui.refresh(OP.ui.current); };
     p.querySelector('#devBoost').onclick = () => { const b = OP.save.d.boosters; b.hint += 20; b.check += 20; b.reveal += 20; OP.save.persist(); if (OP.game.refreshMarks) OP.game.refreshMarks(); };
     p.querySelector('#devAd').onclick = () => { OP.save.d.lastAdAt = Date.now(); OP.save.persist(); };
+    // Pretend a new day has started and open the Daily reward popup (after day 7, start over at day 1).
+    p.querySelector('#devLogin').onclick = () => {
+      const L = OP.save.d.login; if (L.day >= 7) L.day = 0; L.last = null; OP.save.persist();
+      if (OP.ui.current !== 'home') OP.ui.show('home'); else OP.ui.maybeLogin();
+    };
     p.querySelector('#devWipe').onclick = () => { OP.save.reset(); OP.game.clearCache(); OP.ui.show('home'); };
   }
 })();

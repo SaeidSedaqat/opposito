@@ -66,7 +66,7 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.134',
+    VERSION: '0.1.144',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)
@@ -78,8 +78,8 @@
     adCooldown: 180000,
     adSeconds: 3,
     login: [
-      { coins: 50 }, { skin: 'catdog' }, { hint: 3 }, { hint: 3 },
-      { coins: 100 }, { skin: 'ninjapirate' }, { hint: 5 },
+      { coins: 50 }, { skin: 'catdog' }, { coins: 75 }, { skin: 'ninjapirate' },
+      { coins: 100 }, { coins: 150 }, { skin: 'swordshield' },
     ],
     freeReward(n, diff) { const r = this.freeCoins[n]; return (r && r[diff - 1]) || 0; },
     levelSpec, dailySpec, today, dayKeyOffset, dateLabel,
