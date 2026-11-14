@@ -446,7 +446,7 @@
   }
   function hoverCell(i) {
     if (!pz || solved || i == null || i < 0 || !armed) return setHover(null);
-    if (armed === 'check') return setHover([i]);
+    if (armed === 'check') return setHover(pz.givens[i] >= 0 ? null : [i]); // frozen tiles can't be checked
     // Reveal: only the line numbers highlight (hoverLine); hovering the board itself shows nothing.
     setHover(null);
   }
