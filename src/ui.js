@@ -104,12 +104,12 @@
 
   // ---------- Free Play ----------
   const free = screen('free',
-    '<div class="topbar"><button class="circ" id="fBack" aria-label="Back">' + ic('back') + '</button>' +
+    '<div class="topbar tall"><button class="circ" id="fBack" aria-label="Back">' + ic('back') + '</button>' +
     '<h1 class="title">Free Play</h1><span class="circ ghost"></span></div>' +
     '<div class="freebody">' +
     '<div class="lbl">Size</div><div class="pills" id="fSize"></div>' +
     '<div class="lbl">Difficulty</div><div class="pills" id="fDiff"></div>' +
-    '<div class="preview" id="fPrev"></div>' +
+    '<div class="pvwrap"><div class="preview" id="fPrev"></div></div>' +
     '<button class="btn primary big play" id="fPlay">' + ic('play') + '<span class="t">Play</span></button>' +
     '</div>');
 
@@ -131,7 +131,7 @@
 
   // ---------- Shop ----------
   const shop = screen('shop',
-    '<div class="topbar"><button class="circ" id="sBack" aria-label="Back">' + ic('back') + '</button>' +
+    '<div class="topbar tall"><button class="circ" id="sBack" aria-label="Back">' + ic('back') + '</button>' +
     '<h1 class="title">Shop</h1><span class="coins" id="sCoins"></span></div>' +
     '<div class="shopbody"><div class="cards" id="sCards"></div></div>');
 
