@@ -411,20 +411,20 @@
     const sk = OP.skins.get(S().skin);
     const img = (v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>';
     return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + pieces.map(img).join('') +
-      '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
+      '</div>';
   }
   function exLink(valid, same) {
     const sk = OP.skins.get(S().skin);
     const img = (v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>';
     return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + '<span class="ex-pair">' + img(0) + img(valid !== !!same ? 1 : 0) + '<b class="ex-link">' + (same ? '=' : '×') + '</b></span>' +
-      '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
+      '</div>';
   }
   function exGrid(rows, valid) {
     const sk = OP.skins.get(S().skin);
     const n = rows[0].length;
     const cells = rows.flat().map((v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>').join('');
     return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '"><div class="ex-grid" style="--n:' + n + '">' + cells + '</div>' +
-      '<span class="ex-mark">' + ic(valid ? 'tick' : 'cross') + '</span></div>';
+      '</div>';
   }
   function helpSection(title, text, examplesHtml) {
     return '<div class="help-rule"><h3>' + esc(title) + '</h3><p>' + esc(text) + '</p><div class="ex-group">' + examplesHtml + '</div></div>';
