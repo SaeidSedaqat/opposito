@@ -48,12 +48,14 @@
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
   function computeLayout(w, h) {
     const compact = w >= h * 1.15 && h < 640;
-    const bar = 68;
+    // Real rendered height of the booster bar (icons grew in 0.1.108), plus a bottom margin so it never clips.
+    const barEl = document.getElementById('gBar');
+    const bar = Math.max(84, (barEl && barEl.offsetHeight) || 0) + 16;
     let x, y, size;
     if (compact) {
       size = clamp(h - 24 - bar - 12, 160, Math.min(h - 40, w * 0.62));
       x = w - size - 20;
-      y = Math.max(12, (h - size) / 2);
+      y = Math.max(12, (h - size - 12 - bar) / 2);
     } else {
       const top = 60, msgH = 40;
       size = clamp(Math.min(w - 32, h - top - msgH - bar - 24), 160, 620);
