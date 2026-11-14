@@ -257,7 +257,7 @@
   function applyPlacement(i, after, before) {
     pushHist(i, before == null ? board[i] : before, after);
     board[i] = after;
-    OP.audio.play(after === 0 ? 'fire' : after === 1 ? 'ice' : 'clear');
+    OP.audio.play('fire'); // one tap sound for every cell change (Fire, Ice or empty)
     afterPlace();
     if (scene) scene.popAt(i);
     saveCur();
@@ -317,7 +317,7 @@
     board[i] = pz.sol[i];
     B.check--; OP.save.soon();
     armed = null; updateBoosterUI();
-    OP.audio.play(pz.sol[i] === 0 ? 'fire' : 'ice');
+    OP.audio.play('fire');
     afterPlace(); saveCur(); checkWinOrBroken();
   }
   // Reveal: fills in the whole row or column through the tapped cell (whichever has more

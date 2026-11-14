@@ -4,7 +4,7 @@ music.mp3   "Happy Lullaby (song17)" by cynicmusic, CC0
             https://opengameart.org/content/happy-lullaby-song17
 click.mp3, reward.mp3: "Interface Sounds" by Kenney (www.kenney.nl), CC0
             https://kenney.nl/assets/interface-sounds  (click=click_002, reward=maximize_006)
-All other sound effects (open, close, fire, ice, clear, line, wrong, undo, hint, win, coin, daily)
+All other sound effects (open, close, fire, clear, line, wrong, undo, hint, win, coin, daily)
             were synthesized for Opposito with ffmpeg (soft sine tones), CC0.
 
 Files were encoded as MP3 for browser compatibility.
