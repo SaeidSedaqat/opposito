@@ -240,8 +240,7 @@
     '<div class="gen" id="gGen" hidden><i></i><span>Creating puzzle…</span></div>' +
     '<div class="gnums" id="gNums" hidden></div>' +
     '<div class="hand" id="gHand" hidden><i class="ring"></i>' +
-    '<svg viewBox="0 0 64 64"><path d="M25 8c-3 0-5 2.2-5 5v20.5l-3.2-3.1c-2.1-2-5.4-1.9-7.2.4-1.5 1.9-1.4 4.6.2 6.4l12.6 14.2c2.6 3 6.3 4.6 10.2 4.6H40c7.2 0 13-5.8 13-13V30.5c0-2.8-2.2-5-5-5-1 0-1.9.3-2.7.8-.6-2.3-2.7-3.9-5.1-3.9-1.2 0-2.3.4-3.2 1.1-.8-2-2.7-3.3-5-3.3-.7 0-1.4.1-2 .4V13c0-2.8-2.2-5-5-5z" fill="#fff" stroke="#2C3445" stroke-width="3" stroke-linejoin="round"/>' +
-    '<path d="M35.6 26v9M45 27.5V36M30 25v10" stroke="#2C3445" stroke-width="2.6" stroke-linecap="round"/></svg></div>');
+    '<img alt="" draggable="false" src="assets/art/ui/hand.webp?v=' + OP.config.VERSION + '"></div>');
 
   game.querySelector('#gPause').onclick = () => OP.game.pause();
   game.querySelector('#gBar').onclick = (e) => { const b = e.target.closest('.boost'); if (b && !b.hidden) OP.game.booster(b.dataset.b); };
