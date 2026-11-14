@@ -13,8 +13,8 @@
     2: { n: 4, links: [], givens: [I, F, I, E, E, I, F, I, F, F, I, I, E, I, F, E],
       sol: [I, F, I, F, F, I, F, I, F, F, I, I, I, I, F, F] },
   };
-  // Level 1 steps, in order: the one cell the player may tap, the piece it needs, and the row to spotlight.
-  const GUIDE1 = [{ i: 12, v: F, line: 3 }, { i: 3, v: I, line: 0 }];
+  // Level 1 steps, in order: the one cell the player may tap, the piece it needs, and the row or column to spotlight.
+  const GUIDE1 = [{ i: 12, v: F, line: 3 }, { i: 3, v: I, line: 7 }]; // lines: 0-3 rows, 4-7 columns
 
   // Levels 1-5 are 4x4. Level 1 is a hand-made guided tutorial (one allowed tap per step, see
   // game.js), 2 is hand-made with no help, 3 is an extra-easy generated board (extra = givens put
@@ -80,7 +80,7 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.199',
+    VERSION: '0.1.200',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)
