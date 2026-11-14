@@ -69,8 +69,8 @@
     '<div class="homebody"><div class="homemid"><div class="logo big">' + logoHtml() + '</div>' +
     '<div class="menu">' +
     '<button class="btn primary big play" id="hLevels">' + ic('play-white') + '<span class="t" id="hLevelN">Level 1</span></button>' +
-    '<button class="btn big" id="hFree"><span class="t">Free Play</span></button>' +
-    '<button class="btn big daily" id="hDaily"><span class="t">Daily</span><span class="s" id="hDailyS"></span></button>' +
+    '<button class="btn big play" id="hFree">' + ic('play') + '<span class="t">Free Play</span></button>' +
+    '<button class="btn big daily play" id="hDaily">' + ic('play-white') + '<span class="t">Daily</span><span class="s" id="hDailyS"></span></button>' +
     '</div></div>' +
     '<div class="footrow">' +
     '<button class="btn foot" id="hSet">' + ic('gear') + '<span class="t">Settings</span></button>' +
@@ -262,7 +262,7 @@
       const k = el.dataset.b;
       if (k === 'reveal') el.hidden = !state.reveal;
       el.classList.toggle('armed', state.armed === k);
-      if (k === 'undo') { el.classList.toggle('dim', !state.undo); return; }
+      if (k === 'undo') return; // Undo always looks available; with nothing to undo a tap simply does nothing
       el.classList.toggle('off', !!state.off);
       const em = el.querySelector('em');
       em.textContent = b[k] > 0 ? b[k] : '+';
