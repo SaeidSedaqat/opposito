@@ -7,6 +7,8 @@
   const buf = {};
   let music = null, ducked = false, unlocked = false;
   const last = {};
+  // Per-sound level trims, applied to every play of that sound.
+  const BASE = { click: 0.55 };
 
   function settings() { return OP.save.d.settings; }
 
@@ -45,7 +47,7 @@
     if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     const s = ctx.createBufferSource(); s.buffer = buf[name];
     if (rate) s.playbackRate.value = rate;
-    const g = ctx.createGain(); g.gain.value = vol == null ? 1 : vol;
+    const g = ctx.createGain(); g.gain.value = (vol == null ? 1 : vol) * (BASE[name] || 1);
     s.connect(g); g.connect(master); s.start();
   }
 
@@ -55,7 +57,7 @@
     if (want) {
       if (!music) {
         music = new Audio('assets/audio/music.mp3?v=' + OP.config.VERSION);
-        music.loop = true; music.volume = 0.42; music.preload = 'auto';
+        music.loop = true; music.volume = 0.26; music.preload = 'auto';
       }
       if (music.paused) { const p = music.play(); if (p && p.catch) p.catch(() => {}); }
     } else if (music && !music.paused) music.pause();
