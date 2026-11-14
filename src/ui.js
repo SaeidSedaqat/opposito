@@ -73,8 +73,8 @@
     '<button class="btn big daily play" id="hDaily">' + ic('play-white') + '<span class="t">Daily</span><span class="s" id="hDailyS"></span></button>' +
     '</div></div>' +
     '<div class="footrow">' +
-    '<button class="btn foot" id="hSet">' + ic('gear') + '<span class="t">Settings</span></button>' +
-    '<button class="btn foot" id="hShop">' + ic('bag') + '<span class="t">Shop</span></button>' +
+    '<button class="btn foot" id="hSet" aria-label="Settings">' + ic('gear') + '</button>' +
+    '<button class="btn foot" id="hShop" aria-label="Shop">' + ic('bag') + '</button>' +
     '</div></div>');
 
   function logoHtml() {
