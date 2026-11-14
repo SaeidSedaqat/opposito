@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.164') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.164') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.165') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.165') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -146,7 +146,8 @@ img{display:block; max-width:100%;}
 
 /* ---------- game HUD ---------- */
 .screen[data-name="game"]{overflow:hidden; pointer-events:none;}
-#gPause{position:absolute; z-index:3; pointer-events:auto;}
+#gPause{position:absolute; z-index:3; pointer-events:auto; width:75px; height:75px; min-width:75px; border-width:22px 24px 27px;}
+#gPause .ico{width:42px; height:42px; margin:-12px;}
 .glabel{position:absolute; z-index:2; display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none;}
 .glabel b{font-size:16px; font-weight:800;}
 .glabel span{font-size:12.5px; font-weight:700; color:var(--sub);}
@@ -269,6 +270,12 @@ img{display:block; max-width:100%;}
 @keyframes wrin{from{opacity:0; transform:scale(.3);} to{opacity:.9; transform:scale(1);}}
 @keyframes wspin{from{rotate:0deg;} to{rotate:360deg;}}
 .panel.win{overflow:visible;}
+.panel.win h2.solved{font-size:24px;}
+.panel.win .row2{align-self:stretch;}
+.panel.win .row2 .btn{font-size:22px;}
+.panel.win > #wHome{font-size:22px;}
+.btn.dbl{width:auto; align-self:center; min-height:52px; font-size:20px; gap:6px; border-left-width:16px; border-right-width:16px;}
+.btn.dbl .ico{width:26px; height:26px;}
 .modal.on .panel.win .solved{animation:wpop .55s cubic-bezier(.2,1.6,.4,1) both .1s;}
 @keyframes wpop{0%{transform:scale(.3); opacity:0;} 100%{transform:scale(1); opacity:1;}}
 .wspark{position:absolute; width:30px; height:30px; pointer-events:none; background:#FFB020; -webkit-mask:url(assets/art/fx/spark.webp) center/contain no-repeat; mask:url(assets/art/fx/spark.webp) center/contain no-repeat; animation:wtw 1.6s ease-in-out infinite; transform:scale(0);}
@@ -317,7 +324,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.164';
+  var V = '0.1.165';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3888],
@@ -325,7 +332,7 @@ img{display:block; max-width:100%;}
     ['src/skins.js', 12518],
     ['src/audio.js', 2791],
     ['src/puzzle.js', 15600],
-    ['src/ui.js', 35500],
+    ['src/ui.js', 35727],
     ['src/game.js', 29991],
     ['src/main.js', 4641]
   ];

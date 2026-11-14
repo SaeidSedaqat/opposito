@@ -224,10 +224,10 @@
     tim.style.right = sx.r + 12 + 'px'; tim.style.top = sx.t + 14 + 'px';
     if (L.compact) {
       const colW = Math.max(120, L.x - sx.l - 24);
-      lab.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 68) + 'px;width:' + colW + 'px;transform:none;text-align:left;align-items:flex-start';
-      msgEl.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 128) + 'px;width:' + colW + 'px;transform:none;justify-content:flex-start;text-align:left;height:auto;min-height:40px';
+      lab.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 94) + 'px;width:' + colW + 'px;transform:none;text-align:left;align-items:flex-start';
+      msgEl.style.cssText = 'left:' + (sx.l + 12) + 'px;top:' + (sx.t + 154) + 'px;width:' + colW + 'px;transform:none;justify-content:flex-start;text-align:left;height:auto;min-height:40px';
     } else {
-      lab.style.cssText = 'left:50%;top:' + (sx.t + 8) + 'px;transform:translateX(-50%);width:' + Math.max(120, L.W - 2 * 76) + 'px';
+      lab.style.cssText = 'left:50%;top:' + (sx.t + 8) + 'px;transform:translateX(-50%);width:' + Math.max(120, L.W - 2 * 96) + 'px';
       msgEl.style.cssText = 'left:50%;top:' + (sx.t + 62) + 'px;transform:translateX(-50%);width:' + Math.min(L.W - 24, 560) + 'px';
     }
     const bw = Math.min(Math.max(L.size, 280), 440, L.W - 16);
@@ -487,21 +487,22 @@
   }
 
   // ---------- win panel ----------
+  const WIN_WORDS = ['Congratulations!', 'Well done!', 'Amazing!', 'Brilliant!', 'Awesome!', 'Great job!', 'Fantastic!', 'Superb!', 'Nailed it!'];
   function openWin(o) {
     let body = '';
     if (o.mode === 'levels') {
       body = '<div class="reward">' + ic('coin') + '<b id="wCoins">+' + o.coins + '</b></div>' +
         (o.bonus ? '<div class="bonus">' + ic(o.bonus) + 'Bonus: +1 ' + o.bonus + '</div>' : '') +
-        '<button class="btn gold" id="wDouble">' + ic('ad') + 'Double coins</button>' +
-        '<div class="row2"><button class="btn" id="wHome">' + ic('home') + 'Home</button><button class="btn primary" id="wNext">Next' + '</button></div>';
+        '<button class="btn gold dbl" id="wDouble" aria-label="Double coins">' + ic('ad') + 'x2' + ic('coin') + '</button>' +
+        '<div class="row2"><button class="btn" id="wHome">Home</button><button class="btn primary" id="wNext">Next' + '</button></div>';
     } else if (o.mode === 'free') {
-      body = (o.coins ? '<div class="reward">' + ic('coin') + '<b id="wCoins">+' + o.coins + '</b></div><button class="btn gold" id="wDouble">' + ic('ad') + 'Double coins</button>' : '<p class="sub">' + esc(o.label) + '</p>') +
-        '<div class="row2"><button class="btn" id="wHome">' + ic('home') + 'Home</button><button class="btn primary" id="wNext">Next</button></div>';
+      body = (o.coins ? '<div class="reward">' + ic('coin') + '<b id="wCoins">+' + o.coins + '</b></div><button class="btn gold dbl" id="wDouble" aria-label="Double coins">' + ic('ad') + 'x2' + ic('coin') + '</button>' : '<p class="sub">' + esc(o.label) + '</p>') +
+        '<div class="row2"><button class="btn" id="wHome">Home</button><button class="btn primary" id="wNext">Next</button></div>';
     } else {
       body = '<div class="stats"><div><span>Time</span><b>' + fmtTime(o.time) + '</b></div><div><span>Streak</span><b>' + flame() + o.streak + '</b></div></div>' +
-        '<button class="btn primary" id="wHome">' + ic('home') + 'Home</button>';
+        '<button class="btn primary" id="wHome">Home</button>';
     }
-    const m = modal('<div class="panel win"><h2 class="solved">Solved!</h2>' + body + '</div>', { dismiss: false, silent: true });
+    const m = modal('<div class="panel win"><h2 class="solved">' + WIN_WORDS[Math.floor(Math.random() * WIN_WORDS.length)] + '</h2>' + body + '</div>', { dismiss: false, silent: true });
     winFx(m);
     const nx = m.querySelector('#wNext'), hm = m.querySelector('#wHome'), db = m.querySelector('#wDouble');
     if (nx) nx.onclick = () => m.close(o.next);
@@ -513,7 +514,7 @@
         OP.audio.play('coin');
         m.querySelector('#wCoins').dataset.done = '1';
         m.querySelector('#wCoins').textContent = '+' + o.coins * 2;
-        db.innerHTML = ic('tick') + 'Coins doubled';
+        db.innerHTML = ic('tick') + 'x2' + ic('coin');
       });
     };
   }
