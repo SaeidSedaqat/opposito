@@ -66,10 +66,12 @@
   function dateLabel(t) { return MONTHS[t.m] + ' ' + t.day + ', ' + t.y; }
 
   OP.config = {
-    VERSION: '0.1.122',
+    VERSION: '0.1.132',
     DIFFS,
     SIZES: [4, 6, 8, 10],
     coins: [0, 10, 20, 30, 50],      // by diff (1..4)
+    // Free Play pays about half of Levels (it never runs out), more for bigger and harder boards.
+    freeCoins: { 4: [2], 6: [5, 10], 8: [8, 15, 20], 10: [10, 20, 25, 35] },
     tutorialCoins: 10,
     drop: [0, 0, 0, 0.25, 0.4],      // bonus booster chance by diff (Levels only)
     adGives: { hint: 3, check: 2, reveal: 1 },
@@ -79,6 +81,7 @@
       { coins: 50 }, { skin: 'catdog' }, { hint: 3 }, { hint: 3 },
       { coins: 100 }, { skin: 'ninjapirate' }, { hint: 5 },
     ],
+    freeReward(n, diff) { const r = this.freeCoins[n]; return (r && r[diff - 1]) || 0; },
     levelSpec, dailySpec, today, dayKeyOffset, dateLabel,
   };
 })();

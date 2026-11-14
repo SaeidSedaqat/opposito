@@ -234,9 +234,12 @@
     OP.ui.openWin({ mode: 'levels', coins, bonus, next: () => start('levels'), home: () => OP.ui.show('home') });
   }
   function winFree() {
+    const coins = C.freeReward(curSpec.n, curSpec.diff);
+    S().coins += coins;
     curObj().free = null;
     OP.save.persist();
-    OP.ui.openWin({ mode: 'free', label: 'Nice work!', next: () => start('free'), home: () => OP.ui.show('home') });
+    OP.audio.play('coin');
+    OP.ui.openWin({ mode: 'free', coins, label: 'Nice work!', next: () => start('free'), home: () => OP.ui.show('home') });
   }
   function winDaily() {
     const d = S().daily, t = C.today(), y = C.dayKeyOffset(t.key, -1);

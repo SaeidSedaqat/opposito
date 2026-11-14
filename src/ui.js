@@ -26,7 +26,7 @@
     gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="5" rx="1.5" fill="currentColor"/><rect x="4.5" y="13" width="15" height="8" rx="1.5" fill="currentColor" opacity=".85"/><rect x="11" y="9" width="2" height="12" fill="#fff" opacity=".8"/><path d="M12 9C10 5 6 5 7 7.5S12 9 12 9zm0 0c2-4 6-4 5-1.5S12 9 12 9z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   };
   // Button icons: generated WebP art (assets/art/ui); the SVGs above are only a fallback for keys without art.
-  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin'];
+  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white'];
   const ic = (k) => '<i class="ico">' + (ART.indexOf(k) >= 0 ? '<img alt="" draggable="false" src="assets/art/ui/' + k + '.webp?v=' + OP.config.VERSION + '">' : ICON[k]) + '</i>';
   const flame = () => '<img class="flame" alt="" src="' + OP.skins.dataUri('fire', 64) + '">';
 
@@ -107,7 +107,8 @@
     const m = modal('<div class="panel free"><h2>Free Play</h2>' +
       '<div class="lbl">Size</div><div class="pills" id="fSize"></div>' +
       '<div class="lbl">Difficulty</div><div class="pills" id="fDiff"></div>' +
-      '<button class="btn primary big play" id="fPlay">' + ic('play') + '<span class="t">Play</span></button>' +
+      '<div class="freward">Reward' + ic('coin') + '<b id="fReward"></b></div>' +
+      '<button class="btn primary big play" id="fPlay">' + ic('play-white') + '<span class="t">Play</span></button>' +
       '<button class="btn flat" data-x="close">Cancel</button></div>');
     const render = () => {
       const f = S().free;
@@ -116,6 +117,7 @@
       if (f.diff > top) f.diff = top;
       m.querySelector('#fSize').innerHTML = C.SIZES.map((n) => '<button class="pill' + (f.n === n ? ' on' : '') + '" data-n="' + n + '">' + n + '×' + n + '</button>').join('');
       m.querySelector('#fDiff').innerHTML = C.DIFFS.map((d, k) => '<button class="pill' + (f.diff === k + 1 ? ' on' : '') + '" data-d="' + (k + 1) + '"' + (k + 1 > top ? ' disabled' : '') + '>' + d + '</button>').join('');
+      m.querySelector('#fReward').textContent = C.freeReward(f.n, f.diff);
     };
     render();
     m.querySelector('#fSize').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S().free.n = +b.dataset.n; OP.save.soon(); OP.audio.play('click'); render(); };
@@ -338,7 +340,7 @@
 
   function openPause(handlers) {
     const m = modal('<div class="panel"><h2>Paused</h2>' +
-      '<button class="btn primary" data-x="close">' + ic('play') + 'Resume</button>' +
+      '<button class="btn primary" data-x="close">' + ic('play-white') + 'Resume</button>' +
       '<button class="btn" id="pRestart">Restart</button>' +
       '<button class="btn" id="pHelp">' + ic('help') + 'How to play</button>' +
       '<div class="toggles col">' + toggleRow('auto', 'Auto-highlight mistakes') + toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + '</div>' +
@@ -486,7 +488,8 @@
         '<button class="btn gold" id="wDouble">' + ic('ad') + 'Double coins</button>' +
         '<div class="row2"><button class="btn" id="wHome">' + ic('home') + 'Home</button><button class="btn primary" id="wNext">Next' + '</button></div>';
     } else if (o.mode === 'free') {
-      body = '<p class="sub">' + esc(o.label) + '</p><div class="row2"><button class="btn" id="wHome">' + ic('home') + 'Home</button><button class="btn primary" id="wNext">New puzzle</button></div>';
+      body = (o.coins ? '<div class="reward">' + ic('coin') + '<b id="wCoins">+' + o.coins + '</b></div><button class="btn gold" id="wDouble">' + ic('ad') + 'Double coins</button>' : '<p class="sub">' + esc(o.label) + '</p>') +
+        '<div class="row2"><button class="btn" id="wHome">' + ic('home') + 'Home</button><button class="btn primary" id="wNext">Next</button></div>';
     } else {
       body = '<div class="stats"><div><span>Time</span><b>' + fmtTime(o.time) + '</b></div><div><span>Streak</span><b>' + flame() + o.streak + '</b></div></div>' +
         '<button class="btn primary" id="wHome">' + ic('home') + 'Home</button>';
