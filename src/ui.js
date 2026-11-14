@@ -399,7 +399,7 @@
   function loginReward(r) {
     if (r.coins) return { icon: ic('coin'), text: r.coins + ' coins' };
     if (r.hint) return { icon: ic('hint'), text: r.hint + ' hints' };
-    if (r.skin) { const sk = OP.skins.get(r.skin); return { icon: '<img alt="" src="' + OP.skins.dataUri(sk.pa, 64) + '">', text: sk.name }; }
+    if (r.skin) { const sk = OP.skins.get(r.skin); return { icon: '<img alt="" src="' + OP.skins.dataUri(sk.pa, 64) + '"><img alt="" src="' + OP.skins.dataUri(sk.pb, 64) + '">', two: true, text: sk.name }; }
     return { icon: '', text: '' };
   }
   function maybeLogin() {
@@ -410,7 +410,7 @@
     const m = modal('<div class="panel login"><h2>Daily reward</h2><div class="days">' +
       C.login.map((r, k) => {
         const rw = loginReward(r), cls = k < L.day ? 'got' : (k === L.day ? 'now' : '');
-        return '<div class="day ' + cls + (k === 6 ? ' wide' : '') + '"><span class="dn">Day ' + (k + 1) + '</span><span class="di">' + rw.icon + '</span><span class="dt">' + esc(rw.text) + '</span>' + (k < L.day ? '<span class="ok">' + ic('tick') + '</span>' : '') + '</div>';
+        return '<div class="day ' + cls + (k === 6 ? ' wide' : '') + '"><span class="dn">Day ' + (k + 1) + '</span><span class="di' + (rw.two ? ' two' : '') + '">' + rw.icon + '</span><span class="dt">' + esc(rw.text) + '</span>' + (k < L.day ? '<span class="ok">' + ic('tick') + '</span>' : '') + '</div>';
       }).join('') + '</div><button class="btn primary big" id="lClaim">Claim</button></div>', { dismiss: false });
     m.querySelector('#lClaim').onclick = () => {
       const d = S(), r = C.login[d.login.day];
