@@ -15,7 +15,7 @@
   let prevGood = [];
   const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [], focus: null, hover: [] };
   // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
-  const TUT_HELP = { 1: 'all', 11: ['links'], 16: ['bonds'] }; // level 1 opens every rule before the guided tutorial; levels 2-10 open none
+  const TUT_HELP = { 1: ['balance', 'three'], 11: ['links'], 16: ['bonds'] }; // each rule is taught the first time it appears: level 1 Balance + No three, 11 Opposite, 16 Same
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -62,7 +62,7 @@
       size = clamp(Math.min(w - 32, h - top - msgH - bar - 24), 160, 620);
       x = (w - size) / 2;
       const blockH = size + 12 + bar;
-      y = top + msgH + Math.max(12, (h - top - msgH - blockH) / 2);
+      y = top + msgH + Math.max(12, (h - top - msgH - blockH) * 0.3); // sit high: 30% of the spare room above, 70% below
     }
     return { W: w, H: h, x, y, size, compact, safe: { l: 16, t: 16, r: 16 } };
   }
@@ -731,12 +731,10 @@
           return this.add.circle(x, y, size / 5, color, 1).setDepth(depth || 7);
         };
         // 1. Expanding gold ring.
-        const ring = this.add.circle(cx, cy, 10 * dpr, 0xffffff, 0).setStrokeStyle(5 * dpr, 0xffc23d, 1).setDepth(5);
-        this.tweens.add({
-          targets: ring, radius: L.size * 0.8 * dpr, duration: 800, ease: 'Cubic.easeOut',
-          onUpdate: () => { try { ring.setStrokeStyle(5 * this.dpr, 0xffc23d, 1 - ring.radius / (L.size * 0.8 * dpr)); } catch (e2) { /* ignore */ } },
-          onComplete: () => ring.destroy(),
-        });
+        // Drawn once at full size and scaled up (cheap), instead of rebuilding its outline every frame.
+        const R = L.size * 0.8 * dpr;
+        const ring = this.add.circle(cx, cy, R, 0xffffff, 0).setStrokeStyle(5 * dpr, 0xffc23d, 1).setDepth(5).setScale(0.02);
+        this.tweens.add({ targets: ring, scale: 1, alpha: 0, duration: 800, ease: 'Cubic.easeOut', onComplete: () => ring.destroy() });
         // 2. Diagonal wave: each tile hops and flashes a sparkle as the wave passes.
         for (let i = 0; i < n * n; i++) {
           const cont = this.cellC[i]; if (!cont) continue;
@@ -764,17 +762,17 @@
             });
           }
         };
-        burst(cx, cy, 28, L.size * 0.6 * dpr);
+        burst(cx, cy, 20, L.size * 0.6 * dpr);
         const wave = 120 + (2 * n - 2) * 55;
         [[0.22, 0.25], [0.78, 0.3], [0.5, 0.8]].forEach((p, k) => {
           this.time.delayedCall(wave * 0.6 + k * 180, () => {
-            burst(g.ox + g.Sz * p[0], g.oy + g.Sz * p[1], 14, L.size * 0.32 * dpr);
+            burst(g.ox + g.Sz * p[0], g.oy + g.Sz * p[1], 10, L.size * 0.32 * dpr);
             OP.audio.play('clear', 0.35, 1.2 + k * 0.15);
           });
         });
         // 4. Twinkles scattered over the board until the popup arrives.
         this.time.addEvent({
-          delay: 70, repeat: 22, callback: () => {
+          delay: 90, repeat: 14, callback: () => {
             const x = g.ox + Math.random() * g.Sz, y = g.oy + Math.random() * g.Sz;
             const sz = (10 + Math.random() * 18) * dpr;
             const s = spark(x, y, sz, [0xffc23d, 0xffe9a8, 0xffffff][(Math.random() * 3) | 0]);

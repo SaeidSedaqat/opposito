@@ -24,6 +24,10 @@
     help: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z" opacity="0"/><path d="M9.2 9.3a2.8 2.8 0 0 1 5.5.8c0 1.6-1.3 2-2.1 2.7-.5.5-.6.9-.6 1.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="17.4" r="1.3" fill="currentColor"/></svg>',
     coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#F5B83D"/><circle cx="12" cy="12" r="7.2" fill="#FFD36B"/><path d="M12 7.6l1.3 2.9 3.1.3-2.4 2 .8 3.1-2.8-1.7-2.8 1.7.8-3.1-2.4-2 3.1-.3z" fill="#F0A92E"/></svg>',
     gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="5" rx="1.5" fill="currentColor"/><rect x="4.5" y="13" width="15" height="8" rx="1.5" fill="currentColor" opacity=".85"/><rect x="11" y="9" width="2" height="12" fill="#fff" opacity=".8"/><path d="M12 9C10 5 6 5 7 7.5S12 9 12 9zm0 0c2-4 6-4 5-1.5S12 9 12 9z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
+    sound: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h3.5L12 5v14l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    soundOff: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h3.5L12 5v14l-4.5-4H4z"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    music: '<svg viewBox="0 0 24 24"><path d="M9 17.5V5.5l11-2v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="currentColor"/><circle cx="17.5" cy="15.5" r="3" fill="currentColor"/></svg>',
+    musicOff: '<svg viewBox="0 0 24 24"><path d="M9 17.5V5.5l11-2v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="currentColor"/><circle cx="17.5" cy="15.5" r="3" fill="currentColor"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   };
   // Button icons: generated WebP art (assets/art/ui); the SVGs above are only a fallback for keys without art.
   const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
@@ -53,14 +57,29 @@
     current = name;
     const el = screens[name];
     refresh(name);
-    if (prev) {
-      prev.classList.remove('on');
-      setTimeout(() => { if (current !== prev.dataset.name) prev.hidden = true; }, 220);
-    }
-    el.hidden = false;
-    void el.offsetWidth;
-    el.classList.add('on');
-    if (OP.game) OP.game.onScreen(name);
+    const go = () => {
+      if (current !== name) return; // another screen was asked for while this one's art decoded
+      if (prev) {
+        prev.classList.remove('on');
+        setTimeout(() => { if (current !== prev.dataset.name) prev.hidden = true; }, 220);
+      }
+      el.hidden = false;
+      void el.offsetWidth;
+      el.classList.add('on');
+      if (OP.game) OP.game.onScreen(name);
+    };
+    if (name === 'game') go(); else whenDecoded(el, go);
+  }
+  // Phones (iOS especially) decode a new <img> lazily even when the file is already cached, so
+  // art popped in a moment after a popup or the shop appeared. Wait for every image in el to
+  // finish decoding (at most 450 ms) before showing it.
+  function whenDecoded(el, cb) {
+    const imgs = Array.from(el.querySelectorAll('img'));
+    if (!imgs.length || !imgs[0].decode) { cb(); return; }
+    let done = false;
+    const fin = () => { if (!done) { done = true; cb(); } };
+    Promise.all(imgs.map((i) => i.decode().catch(() => {}))).then(fin);
+    setTimeout(fin, 450);
   }
   function refresh(name) { const f = renderers[name]; if (f) f(); }
   const renderers = {};
@@ -95,7 +114,7 @@
     '<div class="homebody"><div class="homemid"><div class="logo big">' + logoHtml() + '</div>' +
     '<div class="menu">' +
     '<button class="btn primary big play" id="hLevels">' + ic('play-white') + '<span class="t" id="hLevelN">Level 1</span></button>' +
-    '<button class="btn big play" id="hFree">' + ic('play') + '<span class="t">Free Play</span></button>' +
+    '<button class="btn big green play" id="hFree">' + ic('play-white') + '<span class="t">Free Play</span></button>' +
     '<button class="btn big daily play" id="hDaily">' + ic('play-white') + '<span class="t">Daily Play</span><span class="s" id="hDailyS"></span></button>' +
     '</div></div>' +
     '<div class="footrow">' +
@@ -332,8 +351,8 @@
     root.appendChild(m);
     stack.push(m);
     void m.offsetWidth;
-    m.classList.add('on');
     fitPanel(m);
+    whenDecoded(m, () => { if (!m.closing) m.classList.add('on'); }); // fade in once its art is ready
     const pnl = m.querySelector('.panel');
     if (pnl && window.MutationObserver) new MutationObserver(() => fitPanel(m)).observe(pnl, { childList: true, subtree: true, characterData: true });
     if (!opts.silent) OP.audio.play('open', 0.7);
@@ -398,9 +417,18 @@
       '<button class="btn primary" data-x="close">' + ic('play-white') + 'Resume</button>' +
       '<button class="btn" id="pRestart">Restart</button>' +
       '<button class="btn" id="pHelp">' + ic('help') + 'How to play</button>' +
-      '<div class="toggles col">' + toggleRow('auto', 'Auto-highlight mistakes') + toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + '</div>' +
+      '<div class="row2"><button class="btn tgl" data-snd="sound"></button><button class="btn tgl" data-snd="music"></button></div>' +
       '<button class="btn" id="pHome">' + ic('home') + 'Home</button></div>', { onClose: handlers.onClose });
-    bindToggles(m);
+    // Sound / Music: one tap flips it; the icon and label show the current state.
+    const paint = () => m.querySelectorAll('[data-snd]').forEach((b) => {
+      const k = b.dataset.snd, on = !!S().settings[k], name = k === 'sound' ? 'Sound' : 'Music';
+      b.classList.toggle('off', !on);
+      b.innerHTML = ic(on ? k : k + 'Off') + name + (on ? ' on' : ' off');
+    });
+    paint();
+    m.querySelectorAll('[data-snd]').forEach((b) => {
+      b.onclick = () => { const k = b.dataset.snd; S().settings[k] = !S().settings[k]; OP.save.persist(); OP.audio.syncMusic(); paint(); };
+    });
     m.querySelector('#pRestart').onclick = () => m.close(handlers.restart);
     m.querySelector('#pHelp').onclick = () => openHelp();
     m.querySelector('#pHome').onclick = () => m.close(handlers.home);
@@ -451,7 +479,7 @@
     if (all) only = null;
     const keys = only && only.length ? only : ['balance', 'three', 'links'].concat(all || S().level >= 16 ? ['bonds'] : []);
     const body = keys.map((k) => sections[k] ? sections[k]() : '').join('');
-    const sub = only && only.length ? 'New rule for this level:' : 'Fill every tile so all the rules below hold at once.';
+    const sub = only && only.length && only.indexOf('balance') < 0 ? 'New rule for this level:' : 'Fill every tile so all the rules below hold at once.';
     modal('<div class="panel help"><h2>How to Play</h2><p class="sub">' + sub + '</p>' +
       body + '<button class="btn primary" data-x="close">Got it</button></div>', { onClose: onClose });
   }
@@ -610,12 +638,12 @@
     // Confetti on a canvas over the whole popup.
     const cv = h('<canvas class="confetti"></canvas>');
     m.appendChild(cv);
-    const dpr = Math.min(window.devicePixelRatio || 1, 2), W = window.innerWidth, H = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5), W = window.innerWidth, H = window.innerHeight;
     cv.width = W * dpr; cv.height = H * dpr;
     const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
     const cols = ['#FF6A45', '#3FA4E8', '#FFC23D', '#7ED957', '#FF8FC8', '#FFFFFF'];
     const bits = [];
-    for (let k = 0; k < 90; k++) {
+    for (let k = 0; k < 60; k++) {
       bits.push({
         x: W / 2 + (Math.random() - 0.5) * 60, y: H * 0.42, vx: (Math.random() - 0.5) * 9, vy: -6 - Math.random() * 9,
         w: 6 + Math.random() * 6, h: 9 + Math.random() * 8, a: Math.random() * 6.28, va: (Math.random() - 0.5) * 0.35,
@@ -626,14 +654,18 @@
     const tick = (now) => {
       if (!m.isConnected) return;
       const t = (now - start) / 1000;
-      ctx.clearRect(0, 0, W, H);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+      ctx.globalAlpha = Math.max(0, Math.min(1, 3.2 - t));
       bits.forEach((b) => {
         b.vy += 0.32; b.vx *= 0.985; b.vy = Math.min(b.vy, 3.2 + Math.sin(b.f + t * 4));
         b.x += b.vx + Math.sin(b.f + t * 3) * 0.6; b.y += b.vy; b.a += b.va;
-        ctx.save(); ctx.globalAlpha = Math.max(0, Math.min(1, 3.2 - t)); ctx.translate(b.x, b.y); ctx.rotate(b.a);
-        ctx.scale(1, Math.abs(Math.cos(b.f + t * 6)) * 0.8 + 0.2);
-        ctx.fillStyle = b.c; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h); ctx.restore();
+        if (b.y > H + 20) return; // off screen: nothing to draw
+        // One setTransform per bit (rotate + flip squash) instead of save/translate/rotate/scale/restore.
+        const ca = Math.cos(b.a), sa = Math.sin(b.a), sq = Math.abs(Math.cos(b.f + t * 6)) * 0.8 + 0.2;
+        ctx.setTransform(ca * dpr, sa * dpr, -sa * sq * dpr, ca * sq * dpr, b.x * dpr, b.y * dpr);
+        ctx.fillStyle = b.c; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h);
       });
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       if (t < 3.3) requestAnimationFrame(tick); else cv.remove();
     };
     requestAnimationFrame(tick);

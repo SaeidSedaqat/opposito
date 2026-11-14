@@ -5,7 +5,7 @@
   const NAMES = ['click', 'fire', 'clear', 'line', 'wrong', 'win', 'coin', 'hint', 'undo', 'open', 'close', 'reward', 'daily'];
   let ctx = null, master = null;
   const buf = {};
-  let music = null, ducked = false, unlocked = false;
+  let ducked = false, unlocked = false;
   const last = {};
   // Per-sound level trims, applied to every play of that sound.
   const BASE = { click: 0.55 };
@@ -14,6 +14,8 @@
 
   function initCtx() {
     if (ctx) return;
+    // Safari 16.4+: "ambient" game audio mixes with other apps and never claims the lock-screen player.
+    try { if (navigator.audioSession) navigator.audioSession.type = 'ambient'; } catch (e) { /* ignore */ }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     try { ctx = new AC(); } catch (e) { ctx = null; return; }
@@ -51,16 +53,32 @@
     s.connect(g); g.connect(master); s.start();
   }
 
+  // Music runs through Web Audio (a looping buffer), not an <audio> element: iOS shows a lock-screen
+  // "Now Playing" player for any <audio> element, and the game should never appear there.
+  let mBuf = null, mLoading = false, mSrc = null, mGain = null, mT0 = 0, mOff = 0;
+  function loadMusic() {
+    if (mBuf || mLoading || !ctx) return;
+    mLoading = true;
+    fetch('assets/audio/music.mp3?v=' + OP.config.VERSION).then((r) => r.arrayBuffer())
+      .then((ab) => new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.catch) p.catch(rej); }))
+      .then((b) => { mBuf = b; mLoading = false; syncMusic(); })
+      .catch(() => { mLoading = false; setTimeout(loadMusic, 3000); }); // retry quietly on a bad connection
+  }
   function syncMusic() {
-    if (!unlocked) return;
+    if (!unlocked || !ctx) return;
     const want = settings().music && !ducked && !document.hidden;
     if (want) {
-      if (!music) {
-        music = new Audio('assets/audio/music.mp3?v=' + OP.config.VERSION);
-        music.loop = true; music.volume = 0.26; music.preload = 'auto';
-      }
-      if (music.paused) { const p = music.play(); if (p && p.catch) p.catch(() => {}); }
-    } else if (music && !music.paused) music.pause();
+      if (!mBuf) { loadMusic(); return; }
+      if (mSrc) return;
+      if (!mGain) { mGain = ctx.createGain(); mGain.gain.value = 0.26; mGain.connect(ctx.destination); }
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      mSrc = ctx.createBufferSource(); mSrc.buffer = mBuf; mSrc.loop = true; mSrc.connect(mGain);
+      mSrc.start(0, mOff % mBuf.duration); mT0 = ctx.currentTime;
+    } else if (mSrc) {
+      mOff = (mOff + ctx.currentTime - mT0) % mBuf.duration; // resume from the same spot later
+      try { mSrc.stop(); } catch (e) { /* ignore */ }
+      mSrc.disconnect(); mSrc = null;
+    }
   }
   document.addEventListener('visibilitychange', () => {
     if (ctx) { if (document.hidden) ctx.suspend().catch(() => {}); else ctx.resume().catch(() => {}); }

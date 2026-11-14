@@ -30,8 +30,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.233') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.233') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.243') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.243') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -43,7 +43,7 @@
 html,body{height:100%;margin:0;}
 body{
   background-color:var(--bg); color:var(--ink);
-  background-image:url(assets/art/bg.webp?v=0.1.233);
+  background-image:url(assets/art/bg.webp?v=0.1.243);
   background-size:cover; background-position:center;
   font-family:'Nunito',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
   overscroll-behavior:none; touch-action:none; user-select:none;
@@ -58,7 +58,7 @@ img{display:block; max-width:100%;}
 #loading{position:fixed; inset:0; z-index:50; background:#000;
   display:flex; align-items:center; justify-content:center; transition:opacity .45s ease;}
 /* Black until the logo AND the background art have loaded, then both fade in together (.lit, 0.5 s, default ease). */
-#loading::before{content:""; position:absolute; inset:0; background:var(--bg) url(assets/art/bg.webp?v=0.1.233) center/cover; opacity:0; transition:opacity .5s ease;}
+#loading::before{content:""; position:absolute; inset:0; background:var(--bg) url(assets/art/bg.webp?v=0.1.243) center/cover; opacity:0; transition:opacity .5s ease;}
 #loading .logoart{opacity:0; transition:opacity .5s ease;}
 #loading.lit::before, #loading.lit .logoart{opacity:1;}
 #loading.done{opacity:0; pointer-events:none;}
@@ -95,7 +95,7 @@ html:not(.land) .topbar.tall .circ .ico, html:not(.land) #gPause .ico{width:34px
 html:not(.land) .topbar.tall .coins{font-size:22px; gap:7px; padding:10px 17px; border-radius:24px;}
 html:not(.land) .topbar.tall .coins .ico{width:29px; height:29px;}
 .grow{flex:1;}
-.circ{width:50px; height:50px; min-width:50px; box-sizing:border-box; border:solid transparent; border-width:15px 16px 18px; border-image:url(assets/art/ui/btn-white.webp?v=0.1.233) 45% 30% 50% 30% fill; filter:drop-shadow(0 4px 6px rgba(35,42,59,.14));
+.circ{width:50px; height:50px; min-width:50px; box-sizing:border-box; border:solid transparent; border-width:15px 16px 18px; border-image:url(assets/art/ui/btn-white.webp?v=0.1.243) 45% 30% 50% 30% fill; filter:drop-shadow(0 4px 6px rgba(35,42,59,.14));
   display:flex; align-items:center; justify-content:center; color:var(--ink); transition:transform .12s ease;}
 .circ:active{transform:scale(.9);}
 .circ .ico{width:28px; height:28px; margin:-8px;}
@@ -111,7 +111,7 @@ html:not(.land) .topbar.tall .coins .ico{width:29px; height:29px;}
 
 /* ---------- buttons ---------- */
 .btn{display:flex; align-items:center; justify-content:center; gap:10px; width:100%; box-sizing:border-box; white-space:nowrap; min-height:62px; padding:0 6px;
-  border:solid transparent; border-width:16px 22px 20px; border-image:url(assets/art/ui/btn-white.webp?v=0.1.233) 45% 25% 50% 25% fill;
+  border:solid transparent; border-width:16px 22px 20px; border-image:url(assets/art/ui/btn-white.webp?v=0.1.243) 45% 25% 50% 25% fill;
   background:none; color:var(--ink); font-weight:900; font-size:19px; filter:drop-shadow(0 6px 8px rgba(35,42,59,.16)); transition:transform .12s ease;}
 .btn:active{transform:scale(.96) translateY(2px);}
 /* Corners drawn at one uniform scale of the art (top 45%, sides 25%, bottom 50% slices), so they stay round instead of squashed. */
@@ -120,15 +120,16 @@ html:not(.land) .topbar.tall .coins .ico{width:29px; height:29px;}
 .pill{border-image-width:14px 13px 16px; will-change:transform; backface-visibility:hidden;}
 .circ{will-change:transform; backface-visibility:hidden;}
 .btn .ico{width:28px; height:28px;}
-.btn.primary{border-image-source:url(assets/art/ui/btn-orange.webp?v=0.1.233); color:#fff; text-shadow:0 2px 0 rgba(150,50,10,.45);}
-.btn.gold{border-image-source:url(assets/art/ui/btn-gold.webp?v=0.1.233); color:#6A4305; text-shadow:0 1px 0 rgba(255,255,255,.55);}
+.btn.primary{border-image-source:url(assets/art/ui/btn-orange.webp?v=0.1.243); color:#fff; text-shadow:0 2px 0 rgba(150,50,10,.45);}
+.btn.gold{border-image-source:url(assets/art/ui/btn-gold.webp?v=0.1.243); color:#6A4305; text-shadow:0 1px 0 rgba(255,255,255,.55);}
 .btn.warn{color:#D2402C;}
 .btn.flat{border-image:none; border-color:transparent; filter:none; color:var(--sub); min-height:44px;}
 .btn.big{flex-direction:column; gap:2px; min-height:86px; border-width:18px 24px 24px;}
 .btn.big .t{font-size:25px; line-height:1.1;}
 .btn.big .s{font-size:15px; font-weight:800; color:var(--sub); text-shadow:none;}
 .btn.primary.big .s{color:#FFF1E8; text-shadow:0 1px 0 rgba(150,50,10,.35);}
-.btn.daily{border-image-source:url(assets/art/ui/btn-navy.webp?v=0.1.233); color:#fff; text-shadow:0 2px 0 rgba(10,20,60,.5);}
+.btn.daily{border-image-source:url(assets/art/ui/btn-navy.webp?v=0.1.243); color:#fff; text-shadow:0 2px 0 rgba(10,20,60,.5);}
+.btn.green{border-image-source:url(assets/art/ui/btn-green.webp?v=0.1.243); color:#fff; text-shadow:0 2px 0 rgba(10,70,40,.45);}
 .btn.daily .s{color:#D3DCF5; text-shadow:0 1px 0 rgba(10,20,60,.4);}
 .btn.play{flex-direction:row; position:relative;}
 .btn.play .ico{width:32px; height:32px; position:absolute; left:2px; top:50%; transform:translateY(-50%);}
@@ -146,16 +147,16 @@ html:not(.land) .topbar.tall .coins .ico{width:29px; height:29px;}
 .footrow > .btn{flex:0 0 min(130px, calc(50% - 15px));}
 /* Wide screens (html.land): same stacked Home, bigger logo, landscape reference size. */
 html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo stays on top in every orientation */
-.btn.foot{border-image-source:url(assets/art/ui/btn-sky.webp?v=0.1.233); min-height:86px; border-width:18px 24px 24px; border-image-width:22px 20px 25px;}
+.btn.foot{border-image-source:url(assets/art/ui/btn-sky.webp?v=0.1.243); min-height:86px; border-width:18px 24px 24px; border-image-width:22px 20px 25px;}
 .btn.foot .ico{width:60px; height:60px; margin:-6px 0;}
 
 /* ---------- free play ---------- */
 .lbl{font-size:13px; font-weight:800; color:var(--sub); text-transform:uppercase; letter-spacing:.04em; margin-top:8px;}
 .pills{display:grid; grid-template-columns:repeat(4,1fr); gap:8px;}
 #fDiff{grid-template-columns:repeat(2,1fr);}
-.pill{min-height:50px; padding:0; white-space:nowrap; border:solid transparent; border-width:13px 12px 16px; border-image:url(assets/art/ui/btn-white.webp?v=0.1.233) 45% 25% 50% 25% fill; filter:drop-shadow(0 4px 6px rgba(35,42,59,.14)); font-weight:900; font-size:16px; color:var(--sub); transition:transform .12s ease,color .15s;}
+.pill{min-height:50px; padding:0; white-space:nowrap; border:solid transparent; border-width:13px 12px 16px; border-image:url(assets/art/ui/btn-white.webp?v=0.1.243) 45% 25% 50% 25% fill; filter:drop-shadow(0 4px 6px rgba(35,42,59,.14)); font-weight:900; font-size:16px; color:var(--sub); transition:transform .12s ease,color .15s;}
 .pill:active{transform:scale(.95);}
-.pill.on{border-image-source:url(assets/art/ui/btn-orange.webp?v=0.1.233); color:#fff; text-shadow:0 2px 0 rgba(150,50,10,.45);}
+.pill.on{border-image-source:url(assets/art/ui/btn-orange.webp?v=0.1.243); color:#fff; text-shadow:0 2px 0 rgba(150,50,10,.45);}
 .pill:disabled{opacity:.35; filter:grayscale(1); cursor:default; transform:none;}
 .toggles{display:flex; flex-direction:column; gap:10px; margin-top:6px;}
 .toggles.col{margin:10px 0;}
@@ -177,7 +178,7 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 .mini i{flex:1; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.55); border-radius:8px;}
 .mini i img{width:84%; height:84%; object-fit:contain;}
 .nm{font-size:12.5px; font-weight:800; text-align:center; line-height:1.2;}
-.st{display:flex; align-items:center; justify-content:center; gap:4px; white-space:nowrap; max-width:100%; box-sizing:border-box; font-size:min(20px,15.5cqw); font-weight:900; padding:.4em .45em; border-radius:14px; color:var(--sub); background:#EEF1F6;}
+.st{display:flex; align-items:center; justify-content:center; gap:4px; white-space:nowrap; max-width:100%; box-sizing:border-box; font-size:min(20px,12.5cqw); font-weight:900; padding:.4em .5em; border-radius:14px; color:var(--sub); background:#EEF1F6;}
 .st .ico{width:1.15em; height:1.15em;}
 .card.equipped .st{background:#E7F7EE; color:var(--good);}
 .card.equip .st{background:#EAF5FD; color:var(--ice);}
@@ -211,7 +212,7 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 .boost.off{opacity:.35; filter:grayscale(1);}
 .boost.off em{display:none;}
 .boost em{position:absolute; top:-8px; right:-2px; font-style:normal; font-size:16px; font-weight:800; background:var(--ink); color:#fff;
-  border-radius:13px; min-width:26px; height:26px; display:flex; align-items:center; justify-content:center; padding:0 6px; line-height:1; box-shadow:0 0 0 2px #fff;} /* count badge: 26px circle, 16px text (0.1.233) */
+  border-radius:13px; min-width:26px; height:26px; display:flex; align-items:center; justify-content:center; padding:0 6px; line-height:1; box-shadow:0 0 0 2px #fff;} /* count badge: 26px circle, 16px text (0.1.243) */
 .boost em.plus{background:var(--good);}
 .gen{position:absolute; z-index:2; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
   background:rgba(246,247,251,.9); border-radius:16px; pointer-events:none;}
@@ -270,23 +271,25 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 .pair span{display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--sub);}
 .pair img{width:46px; height:46px;}
 .act{min-height:48px;}
+.btn.tgl.off{color:#A3AAB6;} /* pause menu Sound / Music buttons: grey when off */
+.btn.tgl .ico{width:26px; height:26px;}
 
 /* ---------- how to play ---------- */
 .panel.help{width:min(420px,100%); text-align:left;}
 .panel.help h2{text-align:center;}
-.help-rule{border-top:1px solid var(--line); padding-top:12px; margin-top:4px;}
+.help-rule{container-type:inline-size; border-top:1px solid var(--line); padding-top:12px; margin-top:4px;}
 .help-rule:first-of-type{border-top:none; padding-top:0; margin-top:0;}
 .help-rule h3{margin:0 0 4px; font-size:14.5px; font-weight:800;}
 .help-rule p{margin:0 0 8px; text-align:left; font-size:13px;}
-.ex-group{display:flex; gap:8px; flex-wrap:wrap;}
+.ex-group{display:flex; gap:6px; flex-wrap:nowrap; --t:min(26px, calc((100cqw - 70px) / 8));} /* every example on one line: tiles shrink to fit 4 pairs */
 .ex-row{display:flex; align-items:center; gap:4px; padding:3px; border-radius:10px; border:2px solid; flex:none;} /* hugs its tiles */
-.ex-row i{width:26px; height:26px; border-radius:6px; background:#fff; display:flex; align-items:center; justify-content:center; flex:none;}
+.ex-row i{width:var(--t); height:var(--t); border-radius:6px; background:#fff; display:flex; align-items:center; justify-content:center; flex:none;}
 .ex-row i img{width:72%; height:72%;}
 .ex-good{border-color:var(--good); background:#EFFBF3;}
 .ex-bad{border-color:var(--bad); background:#FFF1F0;}
 .ex-pair{position:relative; display:flex; gap:3px; flex:none;}
-.ex-link{position:absolute; left:50%; top:50%; transform:translate(-50%,-52%); font-size:13px; font-weight:900; line-height:1; color:#4A5163; pointer-events:none;}
-.ex-grid{display:grid; grid-template-columns:repeat(var(--n),26px); gap:3px;}
+.ex-link{position:absolute; left:50%; top:50%; transform:translate(-50%,-52%); font-size:calc(var(--t) * .5); font-weight:900; line-height:1; color:#4A5163; pointer-events:none;}
+.ex-grid{display:grid; grid-template-columns:repeat(var(--n),var(--t)); gap:3px;}
 
 /* ---------- login track ---------- */
 .panel.login{width:min(400px,100%);}
@@ -319,7 +322,7 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 /* ---------- win panel ---------- */
 .panel.win{align-items:center; text-align:center;}
 .solved{background:linear-gradient(135deg,var(--fire),var(--ice)); -webkit-background-clip:text; background-clip:text; color:transparent;}
-.wrays{position:fixed; left:50%; width:560px; height:560px; margin:-280px 0 0 -280px; pointer-events:none; background:radial-gradient(circle,#FFF3C4 0%,#FFC23D 45%,#FF9F3D 100%); -webkit-mask:url(assets/art/fx/rays.webp?v=0.1.233) center/contain no-repeat; mask:url(assets/art/fx/rays.webp?v=0.1.233) center/contain no-repeat; opacity:0;}
+.wrays{position:fixed; will-change:rotate,transform,opacity; left:50%; width:560px; height:560px; margin:-280px 0 0 -280px; pointer-events:none; background:radial-gradient(circle,#FFF3C4 0%,#FFC23D 45%,#FF9F3D 100%); -webkit-mask:url(assets/art/fx/rays.webp?v=0.1.243) center/contain no-repeat; mask:url(assets/art/fx/rays.webp?v=0.1.243) center/contain no-repeat; opacity:0;}
 .modal.on .wrays{opacity:.9; transform:scale(1); animation:wrin .6s cubic-bezier(.2,1.4,.4,1) both, wspin 14s linear infinite;}
 @keyframes wrin{from{opacity:0; transform:scale(.3);} to{opacity:.9; transform:scale(1);}}
 @keyframes wspin{from{rotate:0deg;} to{rotate:360deg;}}
@@ -332,11 +335,11 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 .btn.dbl .ico{width:26px; height:26px;}
 .modal.on .panel.win .solved{animation:wpop .55s cubic-bezier(.2,1.6,.4,1) both .1s;}
 @keyframes wpop{0%{transform:scale(.3); opacity:0;} 100%{transform:scale(1); opacity:1;}}
-.wspark{position:absolute; width:30px; height:30px; pointer-events:none; background:#FFB020; -webkit-mask:url(assets/art/fx/spark.webp?v=0.1.233) center/contain no-repeat; mask:url(assets/art/fx/spark.webp?v=0.1.233) center/contain no-repeat; animation:wtw 1.6s ease-in-out infinite; transform:scale(0);}
+.wspark{position:absolute; width:30px; height:30px; pointer-events:none; background:#FFB020; -webkit-mask:url(assets/art/fx/spark.webp?v=0.1.243) center/contain no-repeat; mask:url(assets/art/fx/spark.webp?v=0.1.243) center/contain no-repeat; animation:wtw 1.6s ease-in-out infinite; transform:scale(0);}
 @keyframes wtw{0%,100%{transform:scale(0) rotate(0deg);} 50%{transform:scale(1) rotate(90deg);}}
 #wCoins.pop{animation:cpop .35s ease-out;}
 @keyframes cpop{50%{transform:scale(1.35);}}
-.confetti{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:2;}
+.confetti{position:fixed; will-change:transform; inset:0; width:100%; height:100%; pointer-events:none; z-index:2;}
 .reward{display:flex; align-items:center; gap:8px; font-size:26px; font-weight:800; margin:4px 0;}
 .reward .ico{width:30px; height:30px;}
 .bonus{display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:700; color:var(--sub); background:#F3F5F9; border-radius:12px; padding:6px 12px;}
@@ -369,7 +372,7 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 <body>
 <div id="loading">
   <!-- Same layout as the Home screen (invisible stand-ins for its buttons) so the logo sits exactly where Home shows it. -->
-  <div class="homebody"><div class="homemid"><div class="logo big"><img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=0.1.233"></div>
+  <div class="homebody"><div class="homemid"><div class="logo big"><img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=0.1.243"></div>
     <div class="menu lmenu"><div class="btn big"></div><div class="btn big"></div><div class="btn big"></div>
       <div class="lwrap">
         <div class="ltrack"><div id="lbar"></div></div>
@@ -384,16 +387,16 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
 <script>
 (function(){
   'use strict';
-  var V = '0.1.233';
+  var V = '0.1.243';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 5482],
     ['src/save.js', 2076],
     ['src/skins.js', 12518],
-    ['src/audio.js', 2791],
+    ['src/audio.js', 4057],
     ['src/puzzle.js', 17317],
-    ['src/ui.js', 40492],
-    ['src/game.js', 40489],
+    ['src/ui.js', 43344],
+    ['src/game.js', 40541],
     ['src/main.js', 4978]
   ];
   var SFX = [
@@ -406,7 +409,7 @@ html.land .logo.big .logoart{width:462px;} /* 40% bigger on wide screens; logo s
   var ICONS = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
   var IMGS = ICONS.map(function (k) { return ['assets/art/ui/' + k + '.webp?v=' + V, 4000]; })
     .concat([['assets/art/ui/btn-gold.webp?v=' + V, 12502], ['assets/art/ui/btn-navy.webp?v=' + V, 14398], ['assets/art/ui/btn-orange.webp?v=' + V, 14006],
-      ['assets/art/ui/btn-white.webp?v=' + V, 7426], ['assets/art/ui/btn-sky.webp?v=' + V, 13080], ['assets/art/ui/logo.webp?v=' + V, 28664], ['assets/art/fx/rays.webp?v=' + V, 57550], ['assets/art/fx/spark.webp?v=' + V, 2872]])
+      ['assets/art/ui/btn-white.webp?v=' + V, 7426], ['assets/art/ui/btn-sky.webp?v=' + V, 13080], ['assets/art/ui/btn-green.webp?v=' + V, 14086], ['assets/art/ui/logo.webp?v=' + V, 28664], ['assets/art/fx/rays.webp?v=' + V, 57550], ['assets/art/fx/spark.webp?v=' + V, 2872]])
     // Board pieces for every skin (skins.js and Phaser use these exact URLs) and the page background.
     .concat(['alien', 'burger', 'cactus', 'cat', 'coffee', 'dog', 'fire', 'flower', 'ice', 'moon', 'ninja', 'pirate', 'pizza', 'robot', 'shield', 'sun', 'sword', 'tea']
       .map(function (k) { return ['assets/art/pieces/' + k + '.webp?v=' + V, 8600]; }))
