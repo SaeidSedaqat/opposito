@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.121') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.121') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.122') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.122') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -189,7 +189,9 @@ img{display:block; max-width:100%;}
 .panel p{margin:0; font-size:14px; color:var(--sub); text-align:center; line-height:1.4;}
 .panel.small{width:min(320px,100%);}
 .panel.free .lbl{margin-top:4px;}
-.panel.free .play{margin-top:10px;}
+.panel.free .play{margin-top:10px; gap:14px;}
+.panel.free .play .t{font-size:38px;}
+.panel.free .play .ico{width:48px; height:48px;}
 .row2{display:flex; gap:10px;}
 .row2 .btn{flex:1;}
 .sub{font-size:13.5px; color:var(--sub); text-align:center; margin:-4px 0 4px;}
@@ -289,7 +291,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.121';
+  var V = '0.1.122';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3598],
