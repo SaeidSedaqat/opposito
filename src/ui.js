@@ -91,20 +91,18 @@
   renderers.home = function () {
     home.querySelector('#hLevelN').textContent = 'Level ' + S().level;
     const ds = dailyState();
-    const b = home.querySelector('#hDaily');
-    b.disabled = !!ds.solved;
-    // No streak shown; a solved Daily shows its time.
-    const parts = [];
-    if (ds.solved) parts.push('Solved in ' + fmtTime(ds.solved.time));
-    const sEl = home.querySelector('#hDailyS');
-    sEl.innerHTML = parts.join(' · ');
-    sEl.hidden = !parts.length;
+    // Nothing under Daily Play: a solved Daily is reported in a popup when the button is tapped.
+    home.querySelector('#hDailyS').hidden = true;
   };
   home.querySelector('#hSet').onclick = () => openSettings();
   home.querySelector('#hShop').onclick = () => show('shop');
   home.querySelector('#hLevels').onclick = () => OP.game.start('levels');
   home.querySelector('#hFree').onclick = () => openFree();
-  home.querySelector('#hDaily').onclick = () => { if (!dailyState().solved) OP.game.start('daily'); };
+  home.querySelector('#hDaily').onclick = () => { const s = dailyState().solved; if (s) dailyDone(s); else OP.game.start('daily'); };
+  function dailyDone(s) {
+    modal('<div class="panel small daydone"><h2>Daily Play solved!</h2><div class="stats"><div><span>Best time</span><b>' + fmtTime(s.time) + '</b></div></div>' +
+      '<p>Come back tomorrow for a new puzzle.</p><button class="btn primary" data-x="close">OK</button></div>');
+  }
 
   // ---------- Free Play (popup) ----------
   function openFree() {
