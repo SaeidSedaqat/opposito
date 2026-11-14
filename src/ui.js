@@ -78,7 +78,7 @@
     '</div></div>');
 
   function logoHtml() {
-    return '<img alt="" src="' + OP.skins.dataUri('fire', 96) + '"><span class="word">Opposito</span><img alt="" src="' + OP.skins.dataUri('ice', 96) + '">';
+    return '<img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=' + OP.config.VERSION + '">';
   }
 
   function dailyState() {

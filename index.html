@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.173') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.173') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.174') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.174') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -106,7 +106,7 @@ img{display:block; max-width:100%;}
 .homebody{position:absolute; inset:0; display:flex; flex-direction:column; padding:24px;}
 .homemid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8vh; min-height:0;}
 .logo.big{display:flex; align-items:center; gap:10px;}
-.logo.big img{width:clamp(44px,12vw,64px); height:clamp(44px,12vw,64px);}
+.logo.big .logoart{width:min(330px,88vw); height:auto; pointer-events:none;}
 .logo.big .word{font-size:clamp(30px,9vw,44px); font-weight:800; letter-spacing:-.5px;}
 .menu{width:min(340px,86vw); display:flex; flex-direction:column; gap:14px;}
 .footrow{width:min(290px,76vw); margin:0 auto; display:flex; gap:30px; flex:none;}
@@ -337,7 +337,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.173';
+  var V = '0.1.174';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3888],
@@ -345,7 +345,7 @@ img{display:block; max-width:100%;}
     ['src/skins.js', 12518],
     ['src/audio.js', 2791],
     ['src/puzzle.js', 15600],
-    ['src/ui.js', 35659],
+    ['src/ui.js', 35628],
     ['src/game.js', 29991],
     ['src/main.js', 4641]
   ];
@@ -359,7 +359,7 @@ img{display:block; max-width:100%;}
   var ICONS = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
   var IMGS = ICONS.map(function (k) { return ['assets/art/ui/' + k + '.webp?v=' + V, 4000]; })
     .concat([['assets/art/ui/btn-gold.webp', 9924], ['assets/art/ui/btn-navy.webp', 11680], ['assets/art/ui/btn-orange.webp', 11372],
-      ['assets/art/ui/btn-white.webp', 4646], ['assets/art/ui/btn-sky.webp', 11174], ['assets/art/fx/rays.webp', 57550], ['assets/art/fx/spark.webp', 2872]]);
+      ['assets/art/ui/btn-white.webp', 4646], ['assets/art/ui/btn-sky.webp', 11174], ['assets/art/ui/logo.webp?v=' + V, 28664], ['assets/art/fx/rays.webp', 57550], ['assets/art/fx/spark.webp', 2872]]);
   window.OP_IMGS = [];
   var totalBytes = 0;
   FILES.forEach(function (f) { totalBytes += f[1]; });
