@@ -337,10 +337,13 @@
       }
       const cnt = [0, 0];
       for (let k = 0; k < n; k++) if (g[c[k]] >= 0) cnt[g[c[k]]]++;
-      // Too many of one piece: mark the player's pieces only, never the frozen givens (they are right).
-      for (let p = 0; p < 2; p++) if (cnt[p] > P.h) { for (let k = 0; k < n; k++) if (g[c[k]] === p && !(pz.givens && pz.givens[c[k]] >= 0)) cells.add(c[k]); lines.add(L); }
+      // Too many of one piece: mark that piece (frozen givens are dropped below).
+      for (let p = 0; p < 2; p++) if (cnt[p] > P.h) { for (let k = 0; k < n; k++) if (g[c[k]] === p) cells.add(c[k]); lines.add(L); }
     }
     for (const [a, b, s] of P.links) if (g[a] >= 0 && g[b] >= 0 && (g[a] === g[b]) !== !!s) { cells.add(a); cells.add(b); }
+    // Frozen givens are always right, so they are never marked red by any rule. Every real break
+    // involves at least one player tile, so the set stays non-empty whenever something is wrong.
+    if (pz.givens) for (const c of Array.from(cells)) if (pz.givens[c] >= 0) cells.delete(c);
     return { cells, lines };
   }
 
