@@ -15,7 +15,7 @@
   let prevGood = [];
   const fx = { bad: [], glowLines: [], broken: [], hint: null, evidence: [], focus: null, hover: [] };
   // Levels that introduce a rule open the matching How to Play section once, on a fresh start.
-  const TUT_HELP = { 11: ['links'], 16: ['bonds'] }; // levels 1-10 open no How to Play popup (level 1 is the guided tutorial)
+  const TUT_HELP = { 1: 'all', 11: ['links'], 16: ['bonds'] }; // level 1 opens every rule before the guided tutorial; levels 2-10 open none
 
   function isFull(b) { for (let i = 0; i < b.length; i++) if (b[i] < 0) return false; return true; }
 
@@ -206,7 +206,7 @@
     const use = (p) => {
       pz = p; board = Array.from(pz.givens); hist = []; elapsed = 0;
       afterLoad(which, spec);
-      if (TUT_HELP[spec.tut]) OP.ui.openHelp(TUT_HELP[spec.tut]);
+      if (TUT_HELP[spec.tut]) OP.ui.openHelp(TUT_HELP[spec.tut], () => showGuide()); // re-show the tutorial step once the rules are dismissed
     };
     if (made) use(made); else obtain(spec, use);
   }
@@ -624,7 +624,7 @@
         this.gBg.strokeRoundedRect(cx + 1, cy + 1, CS - 2, CS - 2, 6 * dpr);
       }
       this.gLink.clear();
-      // Links are flat badges on the shared edge: "×" = the two cells are opposite, "=" = the same.
+      // Links are small flat dark-grey glyphs on the shared edge: "×" = the two cells are opposite, "=" = the same.
       const gl = this.gLink;
       const bar = (cx, cy, len, th, ang) => { // a flat rounded bar centred on (cx, cy)
         const ca = Math.cos(ang), sa = Math.sin(ang), hl = len / 2, ht = th / 2;
@@ -636,12 +636,10 @@
         const ra = (a / n) | 0, ca = a % n, rb = (b / n) | 0, cb = b % n;
         const ax = ox + P + (ca + 0.5) * CS, ay = oy + P + (ra + 0.5) * CS;
         const bx = ox + P + (cb + 0.5) * CS, by = oy + P + (rb + 0.5) * CS;
-        const mx = (ax + bx) / 2, my = (ay + by) / 2, rad = CS * 0.19;
-        gl.fillStyle(0xffffff, 1); gl.fillCircle(mx, my, rad);
-        gl.lineStyle(1.5 * dpr, 0xc9d0db, 1); gl.strokeCircle(mx, my, rad);
-        const th = rad * 0.3;
-        if (s) { gl.fillStyle(0xF2A516, 1); bar(mx, my - rad * 0.27, rad * 0.95, th, 0); bar(mx, my + rad * 0.27, rad * 0.95, th, 0); }
-        else { gl.fillStyle(0x7B61D9, 1); bar(mx, my, rad * 1.05, th, Math.PI / 4); bar(mx, my, rad * 1.05, th, -Math.PI / 4); }
+        const mx = (ax + bx) / 2, my = (ay + by) / 2, rad = CS * 0.12, th = Math.max(2 * dpr, rad * 0.3);
+        gl.fillStyle(0x4a5163, 1); // plain dark grey glyph, no badge
+        if (s) { bar(mx, my - rad * 0.36, rad * 1.1, th, 0); bar(mx, my + rad * 0.36, rad * 1.1, th, 0); }
+        else { bar(mx, my, rad * 1.25, th, Math.PI / 4); bar(mx, my, rad * 1.25, th, -Math.PI / 4); }
       });
       this.updatePieces();
     }

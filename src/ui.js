@@ -432,9 +432,9 @@
   function helpSections() {
     const sk = OP.skins.get(S().skin);
     return {
-      balance: () => helpSection('Balance', 'Every row and column needs an equal number of ' + sk.an + ' and ' + sk.bn + '.',
+      balance: () => helpSection('Balance', 'Every row and column has the same number of ' + sk.an + ' and ' + sk.bn + '.',
         exGrid([[0, 0, 1, 1]], true) + exGrid([[0, 0, 0, 1]], false)),
-      three: () => helpSection('No three in a row', 'Two of the same piece side by side is fine — three in a row is not.',
+      three: () => helpSection('No three in a row', 'No more than two of the same piece back to back, across or down.',
         exPair([0, 0, 1], true) + exPair([0, 0, 0], false)),
       links: () => helpSection('Opposite ×', 'Two tiles with × between them must be opposite.',
         exLink(true) + exLink(false)),
@@ -443,13 +443,15 @@
     };
   }
   // only: optional array of section keys ('balance'|'three'|'links') to show just the new rule for a level.
-  function openHelp(only) {
-    const sections = helpSections();
-    const keys = only && only.length ? only : ['balance', 'three', 'links'].concat(S().level >= 16 ? ['bonds'] : []);
+  // only = 'all': every rule (the level-1 intro). onClose runs when the popup is dismissed.
+  function openHelp(only, onClose) {
+    const sections = helpSections(), all = only === 'all';
+    if (all) only = null;
+    const keys = only && only.length ? only : ['balance', 'three', 'links'].concat(all || S().level >= 16 ? ['bonds'] : []);
     const body = keys.map((k) => sections[k] ? sections[k]() : '').join('');
     const sub = only && only.length ? 'New rule for this level:' : 'Fill every tile so all the rules below hold at once.';
     modal('<div class="panel help"><h2>How to Play</h2><p class="sub">' + sub + '</p>' +
-      body + '<button class="btn primary" data-x="close">Got it</button></div>');
+      body + '<button class="btn primary" data-x="close">Got it</button></div>', { onClose: onClose });
   }
 
   // Login reward track: seven separate days, never resets.
