@@ -141,11 +141,10 @@
     '<h1 class="title">Shop</h1><span class="coins" id="sCoins"></span></div>' +
     '<div class="shopbody"><div class="cards" id="sCards"></div></div>');
 
-  function miniBoard(sk, n) {
-    const pat = n === 4 ? [0, 1, 1, 0, 1, 0, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0] : [0, 1, 1, 0];
-    const a = OP.skins.dataUri(sk.pa, 96), b = OP.skins.dataUri(sk.pb, 96);
-    return '<div class="mini" style="--n:' + n + ';background:linear-gradient(135deg,' + sk.bg[0] + ',' + sk.bg[1] + ')">' +
-      pat.map((v) => '<i><img alt="" src="' + (v ? b : a) + '"></i>').join('') + '</div>';
+  // Shop preview: the skin's two pieces side by side, big enough to see clearly.
+  function miniBoard(sk) {
+    const a = OP.skins.dataUri(sk.pa, 128), b = OP.skins.dataUri(sk.pb, 128);
+    return '<div class="mini" style="background:linear-gradient(135deg,' + sk.bg[0] + ',' + sk.bg[1] + ')"><i><img alt="" src="' + a + '"></i><i><img alt="" src="' + b + '"></i></div>';
   }
   function skinState(sk) {
     const d = S();
@@ -161,7 +160,7 @@
     shop.querySelector('#sCoins').innerHTML = ic('coin') + '<b>' + S().coins + '</b>';
     shop.querySelector('#sCards').innerHTML = OP.skins.list.map((sk) => {
       const st = skinState(sk);
-      return '<button class="card ' + st.k + '" data-id="' + sk.id + '">' + miniBoard(sk, 2) +
+      return '<button class="card ' + st.k + '" data-id="' + sk.id + '">' + miniBoard(sk) +
         '<span class="nm">' + esc(sk.name) + '</span><span class="st ' + st.k + '">' + st.html + '</span></button>';
     }).join('');
   };
@@ -299,6 +298,16 @@
 
   // ---------- modals ----------
   const stack = [];
+  // No popup ever scrolls: a panel taller than the screen is zoomed down until it fits (94% of the
+  // window height). Refit when it opens, when its content changes and when the window resizes.
+  function fitPanel(m) {
+    const p = m && m.querySelector('.panel'); if (!p) return;
+    p.style.zoom = '';
+    const s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1;
+    const hgt = p.getBoundingClientRect().height, avail = window.innerHeight * 0.94;
+    if (hgt > avail) p.style.zoom = (s * avail / hgt).toFixed(4);
+  }
+  window.addEventListener('resize', () => requestAnimationFrame(() => stack.forEach(fitPanel)));
   function modal(html, opts) {
     opts = opts || {};
     const m = h('<div class="modal"><div class="scrim"></div>' + html + '</div>');
@@ -306,6 +315,9 @@
     stack.push(m);
     void m.offsetWidth;
     m.classList.add('on');
+    fitPanel(m);
+    const pnl = m.querySelector('.panel');
+    if (pnl && window.MutationObserver) new MutationObserver(() => fitPanel(m)).observe(pnl, { childList: true, subtree: true, characterData: true });
     if (!opts.silent) OP.audio.play('open', 0.7);
     m.close = function (cb) {
       if (m.closing) return;

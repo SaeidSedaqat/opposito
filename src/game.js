@@ -206,6 +206,7 @@
     }[which];
     // Levels 1-2 have no boosters at all (not even Undo); the board grows into the freed space.
     const noBar = which === 'levels' && spec.level <= 2;
+    const pz1 = document.getElementById('gPause'); if (pz1) pz1.hidden = which === 'levels' && spec.level === 1; // no pause in the tutorial
     OP.ui.setHud({ l1: labels[0], l2: labels[1], timer: which === 'daily', bar: !noBar, gen: false });
     if (curL) layout(curL.W, curL.H);
     if (which === 'daily') { OP.ui.setTimer(elapsed); startDailyTimer(); } else stopDailyTimer();
@@ -479,6 +480,7 @@
   }
   function pause() {
     if (!pz) return;
+    if (mode === 'levels' && curSpec && curSpec.level === 1) return; // level 1 (tutorial) has no pause
     if (mode === 'daily') stopDailyTimer();
     OP.ui.openPause({
       restart: () => restartCurrent(),
