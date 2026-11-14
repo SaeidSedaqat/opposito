@@ -28,9 +28,17 @@
     soundOff: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h3.5L12 5v14l-4.5-4H4z"/><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
     music: '<svg viewBox="0 0 24 24"><path d="M9 17.5V5.5l11-2v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="currentColor"/><circle cx="17.5" cy="15.5" r="3" fill="currentColor"/></svg>',
     musicOff: '<svg viewBox="0 0 24 24"><path d="M9 17.5V5.5l11-2v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="currentColor"/><circle cx="17.5" cy="15.5" r="3" fill="currentColor"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+    // Flat white icons for the Pause and Settings menu buttons (colour comes from the button).
+    mPlay: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M7.5 5.2v13.6a1.2 1.2 0 0 0 1.8 1l10.6-6.8a1.2 1.2 0 0 0 0-2L9.3 4.2a1.2 1.2 0 0 0-1.8 1z"/></svg>',
+    mRestart: '<svg viewBox="0 0 24 24"><path d="M19 12.5A7 7 0 1 1 16.6 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/><path fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M20.2 3.6v6.2H14z"/></svg>',
+    mBag: '<svg viewBox="0 0 24 24"><path d="M8.7 9.5V7a3.3 3.3 0 0 1 6.6 0v2.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><path fill="currentColor" d="M5.2 8.5h13.6a1 1 0 0 1 1 1.1l-1 10.5a1.6 1.6 0 0 1-1.6 1.4H6.8a1.6 1.6 0 0 1-1.6-1.4l-1-10.5a1 1 0 0 1 1-1.1z"/></svg>',
+    mSound: '<svg viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" d="M3.5 9.2h3.6l5-4.2v14l-5-4.2H3.5z"/><path d="M15.6 9.2a4 4 0 0 1 0 5.6M18.4 6.4a8 8 0 0 1 0 11.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>',
+    mMusic: '<svg viewBox="0 0 24 24"><path d="M9.2 17.5V6.2l10.6-2.4v11.4" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="6.4" cy="17.6" r="3.2" fill="currentColor"/><circle cx="17" cy="15.4" r="3.2" fill="currentColor"/></svg>',
+    mHelp: '<svg viewBox="0 0 24 24"><path d="M8.6 8.8a3.5 3.5 0 1 1 4.9 3.2c-1.1.5-1.5 1.2-1.5 2.3v.6" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="19.6" r="2" fill="currentColor"/></svg>',
+    mHome: '<svg viewBox="0 0 24 24"><path fill="currentColor" d="M12.7 3.1a1 1 0 0 0-1.4 0l-8.6 8a1 1 0 0 0 .7 1.7H5v7.4a1.3 1.3 0 0 0 1.3 1.3h3.6v-5.4a1 1 0 0 1 1-1h2.2a1 1 0 0 1 1 1v5.4h3.6a1.3 1.3 0 0 0 1.3-1.3v-7.4h1.6a1 1 0 0 0 .7-1.7z"/></svg>',
   };
   // Button icons: generated WebP art (assets/art/ui); the SVGs above are only a fallback for keys without art.
-  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white', 'restart-white', 'bag-white', 'sound-white', 'music-white', 'help-white', 'home-white'];
+  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
   const ic = (k) => '<i class="ico">' + (ART.indexOf(k) >= 0 ? '<img alt="" draggable="false" src="assets/art/ui/' + k + '.webp?v=' + OP.config.VERSION + '">' : ICON[k]) + '</i>';
   // Check / Reveal icons: their art over a little 3x3 grid that shows what they act on --
   // Check lights up one cell, Reveal a whole row.
@@ -383,7 +391,7 @@
   const SET_BTN = { sound: 'Sound', music: 'Music' };
   // Icon-only orange buttons (pause menu and Settings): home footer shape, 30% smaller.
   function icb(id, art, label) { return '<button class="btn primary icb" id="' + id + '" aria-label="' + label + '">' + ic(art) + '</button>'; }
-  function setBtn(k) { return '<button class="btn primary icb tgl" data-snd="' + k + '" aria-label="' + SET_BTN[k] + '">' + ic(k + '-white') + '</button>'; }
+  function setBtn(k) { return '<button class="btn primary icb tgl" data-snd="' + k + '" aria-label="' + SET_BTN[k] + '">' + ic(k === 'sound' ? 'mSound' : 'mMusic') + '</button>'; }
   function bindSetBtns(m) {
     const paint = () => m.querySelectorAll('[data-snd]').forEach((b) => {
       const k = b.dataset.snd, on = !!S().settings[k];
@@ -402,7 +410,7 @@
   function openSettings() {
     const m = modal('<div class="panel menu">' + XBTN + '<h2>Settings</h2>' +
       '<div class="icgrid">' + setBtn('sound') + setBtn('music') +
-      icb('mHelp', 'help-white', 'How to play') + icb('mReset', 'restart-white', 'Reset progress') + '</div>' +
+      icb('mHelp', 'mHelp', 'How to play') + icb('mReset', 'mRestart', 'Reset progress') + '</div>' +
       '<div class="credit">Created by SaeidGD</div></div>');
     bindSetBtns(m);
     m.querySelector('#mHelp').onclick = () => openHelp();
@@ -423,10 +431,10 @@
 
   function openPause(handlers) {
     const m = modal('<div class="panel menu"><h2>Pause</h2><div class="icgrid">' +
-      '<button class="btn primary icb wide" data-x="close" aria-label="Resume">' + ic('play-white') + '</button>' +
-      icb('pRestart', 'restart-white', 'Restart') + icb('pShop', 'bag-white', 'Shop') +
+      '<button class="btn primary icb wide" data-x="close" aria-label="Resume">' + ic('mPlay') + '</button>' +
+      icb('pRestart', 'mRestart', 'Restart') + icb('pShop', 'mBag', 'Shop') +
       setBtn('sound') + setBtn('music') +
-      icb('pHelp', 'help-white', 'How to play') + icb('pHome', 'home-white', 'Home') +
+      icb('pHelp', 'mHelp', 'How to play') + icb('pHome', 'mHome', 'Home') +
       '</div></div>', { onClose: handlers.onClose });
     bindSetBtns(m);
     m.querySelector('#pRestart').onclick = () => m.close(handlers.restart);
