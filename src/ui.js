@@ -373,29 +373,35 @@
   }
   function modalOpen() { return stack.length > 0 || adOn; }
 
-  function toggleRow(key, label) {
-    return '<label class="tg"><span>' + label + '</span><input type="checkbox" data-set="' + key + '"' + (S().settings[key] ? ' checked' : '') + '><b></b></label>';
-  }
-  function bindToggles(m) {
-    m.querySelectorAll('[data-set]').forEach((inp) => {
-      inp.onchange = () => {
-        S().settings[inp.dataset.set] = inp.checked;
-        OP.save.persist();
-        OP.audio.syncMusic();
-        OP.audio.play('click');
-        if (inp.dataset.set === 'auto' && OP.game) OP.game.refreshMarks();
+  // Settings and pause menu: Sound, Music (and in Settings, mistake highlighting) are buttons, not
+  // switches. One tap flips the setting; the icon and label show its state, greyed out when off.
+  const SET_BTN = { sound: 'Sound', music: 'Music', auto: 'Highlight mistakes' };
+  function setBtn(k) { return '<button class="btn tgl" data-snd="' + k + '"></button>'; }
+  function bindSetBtns(m) {
+    const paint = () => m.querySelectorAll('[data-snd]').forEach((b) => {
+      const k = b.dataset.snd, on = !!S().settings[k];
+      b.classList.toggle('off', !on);
+      const icon = k === 'auto' ? '' : ic(on ? k : k + 'Off');
+      b.innerHTML = icon + SET_BTN[k] + (on ? ' on' : ' off');
+    });
+    paint();
+    m.querySelectorAll('[data-snd]').forEach((b) => {
+      b.onclick = () => {
+        const k = b.dataset.snd; S().settings[k] = !S().settings[k];
+        OP.save.persist(); OP.audio.syncMusic(); paint();
+        if (k === 'auto' && OP.game) OP.game.refreshMarks();
       };
     });
   }
 
   function openSettings() {
-    const m = modal('<div class="panel"><h2>Settings</h2><div class="toggles col">' +
-      toggleRow('sound', 'Sound') + toggleRow('music', 'Music') + toggleRow('auto', 'Auto-highlight mistakes') + '</div>' +
+    const m = modal('<div class="panel"><h2>Settings</h2>' +
+      '<div class="row2">' + setBtn('sound') + setBtn('music') + '</div>' + setBtn('auto') +
       '<button class="btn" id="mHelp">' + ic('help') + 'How to play</button>' +
       '<button class="btn warn" id="mReset">Reset progress</button>' +
       '<button class="btn primary" data-x="close">Done</button>' +
       '<div class="credit">Created by SaeidGD</div></div>');
-    bindToggles(m);
+    bindSetBtns(m);
     m.querySelector('#mHelp').onclick = () => openHelp();
     m.querySelector('#mReset').onclick = () => confirmBox('Reset progress?', 'Coins, levels, skins, boosters and streaks will be erased. This cannot be undone.', 'Reset', () => {
       OP.save.reset();
@@ -417,18 +423,9 @@
       '<button class="btn primary" data-x="close">' + ic('play-white') + 'Resume</button>' +
       '<button class="btn" id="pRestart">Restart</button>' +
       '<button class="btn" id="pHelp">' + ic('help') + 'How to play</button>' +
-      '<div class="row2"><button class="btn tgl" data-snd="sound"></button><button class="btn tgl" data-snd="music"></button></div>' +
+      '<div class="row2">' + setBtn('sound') + setBtn('music') + '</div>' +
       '<button class="btn" id="pHome">' + ic('home') + 'Home</button></div>', { onClose: handlers.onClose });
-    // Sound / Music: one tap flips it; the icon and label show the current state.
-    const paint = () => m.querySelectorAll('[data-snd]').forEach((b) => {
-      const k = b.dataset.snd, on = !!S().settings[k], name = k === 'sound' ? 'Sound' : 'Music';
-      b.classList.toggle('off', !on);
-      b.innerHTML = ic(on ? k : k + 'Off') + name + (on ? ' on' : ' off');
-    });
-    paint();
-    m.querySelectorAll('[data-snd]').forEach((b) => {
-      b.onclick = () => { const k = b.dataset.snd; S().settings[k] = !S().settings[k]; OP.save.persist(); OP.audio.syncMusic(); paint(); };
-    });
+    bindSetBtns(m);
     m.querySelector('#pRestart').onclick = () => m.close(handlers.restart);
     m.querySelector('#pHelp').onclick = () => openHelp();
     m.querySelector('#pHome').onclick = () => m.close(handlers.home);
