@@ -446,7 +446,8 @@
   function hoverCell(i) {
     if (!pz || solved || i == null || i < 0 || !armed) return setHover(null);
     if (armed === 'check') return setHover([i]);
-    setHover(OP.Puzzle.ctx(pz.n, pz.links).lc[lineFor(i)].slice());
+    // Reveal: only the line numbers highlight (hoverLine); hovering the board itself shows nothing.
+    setHover(null);
   }
   function hoverLine(L) {
     if (!pz || armed !== 'reveal' || L == null) return setHover(null);
