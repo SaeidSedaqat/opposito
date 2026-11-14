@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.165') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.165') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.166') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.166') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -324,7 +324,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.165';
+  var V = '0.1.166';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3888],
@@ -341,18 +341,32 @@ img{display:block; max-width:100%;}
     ['wrong', 3386], ['win', 10909], ['coin', 3386], ['hint', 5058], ['undo', 1923],
     ['open', 3177], ['close', 3177], ['reward', 3595], ['daily', 8193]
   ];
+  // UI art: decoded during loading so icons and button skins never pop in empty later.
+  // Icons are requested with ?v= exactly like ui.js does; button skins and fx come from CSS without it.
+  var ICONS = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
+  var IMGS = ICONS.map(function (k) { return ['assets/art/ui/' + k + '.webp?v=' + V, 4000]; })
+    .concat([['assets/art/ui/btn-gold.webp', 9924], ['assets/art/ui/btn-navy.webp', 11680], ['assets/art/ui/btn-orange.webp', 11372],
+      ['assets/art/ui/btn-white.webp', 4646], ['assets/art/fx/rays.webp', 57550], ['assets/art/fx/spark.webp', 2872]]);
+  window.OP_IMGS = [];
   var totalBytes = 0;
   FILES.forEach(function (f) { totalBytes += f[1]; });
   SFX.forEach(function (f) { totalBytes += f[1]; });
+  IMGS.forEach(function (f) { totalBytes += f[1]; });
   var loaded = 0;
   var scr = document.getElementById('loading'), bar = document.getElementById('lbar'),
       pct = document.getElementById('lpct'), err = document.getElementById('lerr');
 
-  function setPct(p) {
-    p = Math.max(0, Math.min(100, p));
-    if (bar) bar.style.width = p + '%';
-    if (pct) pct.textContent = Math.round(p) + '%';
+  // The bar never jumps: setPct only moves the target, and the shown value runs up to it quickly.
+  var target = 0, shown = 0, onFull = null, raf = window.requestAnimationFrame || function (f) { return setTimeout(f, 16); };
+  function draw() {
+    if (shown < target) shown = Math.min(target, shown + Math.max(0.8, (target - shown) * 0.08));
+    if (bar) bar.style.width = shown + '%';
+    if (pct) pct.textContent = Math.round(shown) + '%';
+    if (shown >= 100 && onFull) { var f = onFull; onFull = null; f(); return; }
+    raf(draw);
   }
+  raf(draw);
+  function setPct(p) { target = Math.max(target, Math.max(0, Math.min(100, p))); }
   function fail() { if (err) err.hidden = false; }
   function bump(bytes) { loaded += bytes; setPct(92 * loaded / totalBytes); }
 
@@ -392,7 +406,7 @@ img{display:block; max-width:100%;}
   // starting the next) and only run the scripts, in order, once everything has arrived.
   function loadAll() {
     var texts = new Array(FILES.length);
-    var remaining = FILES.length + SFX.length;
+    var remaining = FILES.length + SFX.length + IMGS.length;
     var failed = false;
     function settle() {
       remaining--;
@@ -414,6 +428,14 @@ img{display:block; max-width:100%;}
         settle();
       });
     });
+    IMGS.forEach(function (f) {
+      var img = new Image(), done = false;
+      function ok() { if (done) return; done = true; bump(f[1]); settle(); }
+      img.onload = function () { if (img.decode) img.decode().then(ok, ok); else ok(); };
+      img.onerror = ok;
+      img.src = f[0];
+      window.OP_IMGS.push(img); // keep a reference so the decoded image stays cached
+    });
     function runScripts() {
       for (var i = 0; i < FILES.length; i++) {
         try {
@@ -428,11 +450,13 @@ img{display:block; max-width:100%;}
   }
   function finish() {
     try { if (document.fonts) document.fonts.load('800 20px Nunito'); } catch (e) { /* ignore */ }
+    onFull = function () {
+      setTimeout(function () {
+        if (scr) scr.classList.add('done');
+        setTimeout(function () { if (scr && scr.parentNode) scr.parentNode.removeChild(scr); }, 450);
+      }, 150);
+    };
     setPct(100);
-    setTimeout(function () {
-      if (scr) scr.classList.add('done');
-      setTimeout(function () { if (scr && scr.parentNode) scr.parentNode.removeChild(scr); }, 450);
-    }, 200);
   }
 
   loadAll();
