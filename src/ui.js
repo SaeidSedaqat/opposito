@@ -413,10 +413,12 @@
     return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + pieces.map(img).join('') +
       '</div>';
   }
-  function exLink(valid, same) {
+  // a, b: the two pieces (0 or 1); same: = link, else 00d7. Green when the pair obeys the link.
+  function exLink(a, b, same) {
     const sk = OP.skins.get(S().skin);
     const img = (v) => '<i><img alt="" src="' + OP.skins.dataUri(v === 0 ? sk.pa : sk.pb, 64) + '"></i>';
-    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + '<span class="ex-pair">' + img(0) + img(valid !== !!same ? 1 : 0) + '<b class="ex-link">' + (same ? '=' : '×') + '</b></span>' +
+    const valid = (a === b) === !!same;
+    return '<div class="ex-row ' + (valid ? 'ex-good' : 'ex-bad') + '">' + '<span class="ex-pair">' + img(a) + img(b) + '<b class="ex-link">' + (same ? '=' : '×') + '</b></span>' +
       '</div>';
   }
   function exGrid(rows, valid) {
@@ -434,12 +436,12 @@
     return {
       balance: () => helpSection('Balance', 'Every row and column has the same number of ' + sk.an + ' and ' + sk.bn + '.',
         exGrid([[0, 0, 1, 1]], true) + exGrid([[0, 0, 0, 1]], false)),
-      three: () => helpSection('No three in a row', 'No more than two of the same piece back to back, across or down.',
+      three: () => helpSection('No three in a row', 'No more than two of the same piece back to back.',
         exPair([0, 0, 1], true) + exPair([0, 0, 0], false)),
       links: () => helpSection('Opposite ×', 'Two tiles with × between them must be opposite.',
-        exLink(true) + exLink(false)),
+        exLink(0, 1) + exLink(1, 0) + exLink(0, 0) + exLink(1, 1)),
       bonds: () => helpSection('Same =', 'Two tiles with = between them must be the same.',
-        exLink(true, true) + exLink(false, true)),
+        exLink(0, 0, true) + exLink(1, 1, true) + exLink(0, 1, true) + exLink(1, 0, true)),
     };
   }
   // only: optional array of section keys ('balance'|'three'|'links') to show just the new rule for a level.
