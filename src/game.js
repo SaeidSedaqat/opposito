@@ -144,11 +144,15 @@
     OP.ui.msg(t, { tone: 'tut' });
     pointAtCell(st.i);
   }
+  // The tutorial's second-piece step on an empty cell is taught as a double tap (empty -> second piece).
+  function needsDouble(st) { return st.v === 1 && board[st.i] < 0; }
+  let guideTapAt = 0;
   function pointAtCell(i) {
     if (!curL || !pz) return;
     const g = curL.g || 1, n = pz.n, size = curL.size / g, pad = size * 0.03, cs = (size - 2 * pad) / n;
     const cx = curL.x / g + pad + (i % n + 0.5) * cs, cy = curL.y / g + pad + (((i / n) | 0) + 0.5) * cs;
-    OP.ui.pointer(cx - 16, cy - 3); // the hand's ring is centred 16px right / 3px down of its anchor
+    const st = guideStep(), dbl = !!(st && st.i === i && needsDouble(st));
+    OP.ui.pointer(cx - 16, cy - 3, dbl); // the hand's ring is centred 16px right / 3px down of its anchor
   }
 
   // ---------- save / resume ----------
@@ -348,6 +352,15 @@
     if (armed === 'reveal') { doReveal(i); return; }
     const st = guideStep();
     if (st && i !== st.i) { if (scene) scene.shakeCell(i); pointAtCell(st.i); return; }
+    if (st && needsDouble(st)) {
+      // One tap does nothing here: only a second tap within 450 ms places the piece, so the player
+      // really learns the double tap. Both taps count as one move (one undo step).
+      const now = performance.now();
+      if (now - guideTapAt > 450) { guideTapAt = now; return; }
+      guideTapAt = 0;
+      applyPlacement(i, 1, board[i]);
+      return;
+    }
     if (pz.givens[i] >= 0) { if (scene) scene.shakeCell(i); return; }
     const before = board[i], after = before < 0 ? 0 : (before === 0 ? 1 : -1);
     applyPlacement(i, after, before);
@@ -499,6 +512,8 @@
     OP.ui.openPause({
       restart: () => restartCurrent(),
       home: () => { saveCur(); OP.ui.show('home'); },
+      // Shop from the pause menu: Back returns to this game with the pause menu open again.
+      shop: () => { saveCur(); OP.ui.openShop(() => { OP.ui.show('game'); pause(); }); },
       onClose: () => { if (mode === 'daily' && OP.ui.current === 'game') startDailyTimer(); },
     });
   }
@@ -507,7 +522,10 @@
     if (name !== 'game' && mode === 'daily') stopDailyTimer();
     if (scene && scene.sys && scene.sys.game && scene.sys.game.canvas) {
       scene.sys.game.canvas.style.display = name === 'game' ? '' : 'none';
-      if (name === 'game') { const g = document.getElementById('game'); requestAnimationFrame(() => { g.style.opacity = '1'; }); }
+      if (name === 'game') {
+        const g = document.getElementById('game'); requestAnimationFrame(() => { g.style.opacity = '1'; });
+        if (scene.L && pz) scene.updatePieces(); // a skin may have been equipped in the shop
+      }
     }
   }
   function refreshMarks() {

@@ -30,7 +30,7 @@
     musicOff: '<svg viewBox="0 0 24 24"><path d="M9 17.5V5.5l11-2v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="17.5" r="3" fill="currentColor"/><circle cx="17.5" cy="15.5" r="3" fill="currentColor"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   };
   // Button icons: generated WebP art (assets/art/ui); the SVGs above are only a fallback for keys without art.
-  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
+  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white', 'restart-white', 'bag-white', 'sound-white', 'music-white', 'help-white', 'home-white'];
   const ic = (k) => '<i class="ico">' + (ART.indexOf(k) >= 0 ? '<img alt="" draggable="false" src="assets/art/ui/' + k + '.webp?v=' + OP.config.VERSION + '">' : ICON[k]) + '</i>';
   // Check / Reveal icons: their art over a little 3x3 grid that shows what they act on --
   // Check lights up one cell, Reveal a whole row.
@@ -140,7 +140,7 @@
     home.querySelector('#hDailyS').hidden = true;
   };
   home.querySelector('#hSet').onclick = () => openSettings();
-  home.querySelector('#hShop').onclick = () => show('shop');
+  home.querySelector('#hShop').onclick = () => openShop();
   home.querySelector('#hLevels').onclick = () => OP.game.start('levels');
   home.querySelector('#hFree').onclick = () => openFree();
   home.querySelector('#hDaily').onclick = () => { const s = dailyState().solved; if (s) dailyDone(s); else OP.game.start('daily'); };
@@ -201,7 +201,10 @@
         '<span class="nm">' + esc(sk.name) + '</span><span class="st ' + st.k + '">' + st.html + '</span></button>';
     }).join('');
   };
-  shop.querySelector('#sBack').onclick = () => show('home');
+  // The shop can be opened from the pause menu: Back then returns to the game (and its pause menu).
+  let shopBack = null;
+  function openShop(back) { shopBack = back || null; show('shop'); }
+  shop.querySelector('#sBack').onclick = () => { const b = shopBack; shopBack = null; if (b) b(); else show('home'); };
   shop.querySelector('#sCards').onclick = (e) => { const b = e.target.closest('.card'); if (b) cardTap(OP.skins.get(b.dataset.id)); };
   function cardTap(sk) {
     const st = skinState(sk);
@@ -326,11 +329,12 @@
   nums.addEventListener('click', (e) => { const b = e.target.closest('.lnum'); if (b) OP.game.revealLine(+b.dataset.l); });
 
   const hand = game.querySelector('#gHand');
-  function pointer(x, y) {
+  // dbl: double-tap motion (tap, tap, rest 1 s, repeat) for a step that needs two taps.
+  function pointer(x, y, dbl) {
     if (x == null) { hand.hidden = true; return; }
     hand.hidden = false;
     hand.style.left = x + 'px'; hand.style.top = y + 'px';
-    hand.classList.remove('again'); void hand.offsetWidth; hand.classList.add('again');
+    hand.classList.remove('again', 'dbl'); void hand.offsetWidth; hand.classList.add(dbl ? 'dbl' : 'again');
   }
 
   // ---------- modals ----------
@@ -375,31 +379,29 @@
 
   // Settings and pause menu: Sound, Music (and in Settings, mistake highlighting) are buttons, not
   // switches. One tap flips the setting; the icon and label show its state, greyed out when off.
-  const SET_BTN = { sound: 'Sound', music: 'Music', auto: 'Highlight mistakes' };
-  function setBtn(k) { return '<button class="btn tgl" data-snd="' + k + '"></button>'; }
+  const SET_BTN = { sound: 'Sound', music: 'Music' };
+  // Icon-only orange buttons (pause menu and Settings): home footer shape, 30% smaller.
+  function icb(id, art, label) { return '<button class="btn primary icb" id="' + id + '" aria-label="' + label + '">' + ic(art) + '</button>'; }
+  function setBtn(k) { return '<button class="btn primary icb tgl" data-snd="' + k + '" aria-label="' + SET_BTN[k] + '">' + ic(k + '-white') + '</button>'; }
   function bindSetBtns(m) {
     const paint = () => m.querySelectorAll('[data-snd]').forEach((b) => {
       const k = b.dataset.snd, on = !!S().settings[k];
-      b.classList.toggle('off', !on);
-      const icon = k === 'auto' ? '' : ic(on ? k : k + 'Off');
-      b.innerHTML = icon + SET_BTN[k] + (on ? ' on' : ' off');
+      b.classList.toggle('off', !on); // off: icon dimmed with a slash through it (CSS)
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     paint();
     m.querySelectorAll('[data-snd]').forEach((b) => {
       b.onclick = () => {
         const k = b.dataset.snd; S().settings[k] = !S().settings[k];
         OP.save.persist(); OP.audio.syncMusic(); paint();
-        if (k === 'auto' && OP.game) OP.game.refreshMarks();
       };
     });
   }
 
   function openSettings() {
-    const m = modal('<div class="panel"><h2>Settings</h2>' +
-      '<div class="row2">' + setBtn('sound') + setBtn('music') + '</div>' + setBtn('auto') +
-      '<button class="btn" id="mHelp">' + ic('help') + 'How to play</button>' +
-      '<button class="btn warn" id="mReset">Reset progress</button>' +
-      '<button class="btn primary" data-x="close">Done</button>' +
+    const m = modal('<div class="panel"><button class="xclose" data-x="close" aria-label="Close">' + ICON.cross + '</button><h2>Settings</h2>' +
+      '<div class="icgrid">' + setBtn('sound') + setBtn('music') +
+      icb('mHelp', 'help-white', 'How to play') + icb('mReset', 'restart-white', 'Reset progress') + '</div>' +
       '<div class="credit">Created by SaeidGD</div></div>');
     bindSetBtns(m);
     m.querySelector('#mHelp').onclick = () => openHelp();
@@ -419,16 +421,17 @@
   }
 
   function openPause(handlers) {
-    const m = modal('<div class="panel"><h2>Paused</h2>' +
-      '<button class="btn primary" data-x="close">' + ic('play-white') + 'Resume</button>' +
-      '<button class="btn" id="pRestart">Restart</button>' +
-      '<button class="btn" id="pHelp">' + ic('help') + 'How to play</button>' +
-      '<div class="row2">' + setBtn('sound') + setBtn('music') + '</div>' +
-      '<button class="btn" id="pHome">' + ic('home') + 'Home</button></div>', { onClose: handlers.onClose });
+    const m = modal('<div class="panel small"><h2>Pause</h2><div class="icgrid">' +
+      '<button class="btn primary icb wide" data-x="close" aria-label="Resume">' + ic('play-white') + '</button>' +
+      icb('pRestart', 'restart-white', 'Restart') + icb('pShop', 'bag-white', 'Shop') +
+      setBtn('sound') + setBtn('music') +
+      icb('pHelp', 'help-white', 'How to play') + icb('pHome', 'home-white', 'Home') +
+      '</div></div>', { onClose: handlers.onClose });
     bindSetBtns(m);
     m.querySelector('#pRestart').onclick = () => m.close(handlers.restart);
     m.querySelector('#pHelp').onclick = () => openHelp();
     m.querySelector('#pHome').onclick = () => m.close(handlers.home);
+    m.querySelector('#pShop').onclick = () => m.close(handlers.shop);
   }
 
   // ---------- How to Play: the rules, each with a tiny valid/invalid example ----------
@@ -687,7 +690,7 @@
   OP.ui = {
     show, refresh, get current() { return current; },
     msg, placeHud, setHud, setTimer, setBoosters, pointer, setLineNums,
-    modal, modalOpen, openSettings, openPause, openHelp, openWin, maybeLogin, boosterAd,
+    modal, modalOpen, openSettings, openPause, openShop, openHelp, openWin, maybeLogin, boosterAd,
     rewardedAd, adBreak, playLoading, toast, fmtTime, dailyState, logoHtml, esc,
   };
 })();
