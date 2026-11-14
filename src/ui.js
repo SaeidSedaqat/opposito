@@ -26,7 +26,7 @@
     gift: '<svg viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="5" rx="1.5" fill="currentColor"/><rect x="4.5" y="13" width="15" height="8" rx="1.5" fill="currentColor" opacity=".85"/><rect x="11" y="9" width="2" height="12" fill="#fff" opacity=".8"/><path d="M12 9C10 5 6 5 7 7.5S12 9 12 9zm0 0c2-4 6-4 5-1.5S12 9 12 9z" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
   };
   // Button icons: generated WebP art (assets/art/ui); the SVGs above are only a fallback for keys without art.
-  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white'];
+  const ART = ['gear', 'bag', 'back', 'pause', 'undo', 'hint', 'check', 'reveal', 'home', 'play', 'lock', 'ad', 'tick', 'cross', 'help', 'coin', 'play-white', 'ad-white'];
   const ic = (k) => '<i class="ico">' + (ART.indexOf(k) >= 0 ? '<img alt="" draggable="false" src="assets/art/ui/' + k + '.webp?v=' + OP.config.VERSION + '">' : ICON[k]) + '</i>';
   const flame = () => '<img class="flame" alt="" src="' + OP.skins.dataUri('fire', 64) + '">';
 
@@ -143,7 +143,7 @@
     if (d.owned.indexOf(sk.id) >= 0) return { k: 'equip', html: 'Equip' };
     const u = sk.unlock;
     if (u.type === 'coins') return { k: d.coins >= u.price ? 'buy' : 'poor', html: ic('coin') + u.price };
-    if (u.type === 'ad') return { k: 'ad', html: ic('ad') + 'Watch ad' };
+    if (u.type === 'ad') return { k: 'ad', html: ic('ad') + 'Watch ad', long: ic('ad-white') + 'Watch ad' };
     if (u.type === 'login') return { k: 'locked', html: ic('lock') + 'Day ' + u.day, long: ic('lock') + 'Day ' + u.day + ' login' };
     return { k: 'locked', html: '' };
   }
@@ -432,7 +432,7 @@
     let pick = pre;
     const m = modal('<div class="panel"><h2>Out of ' + (pre === 'reveal' ? 'reveals' : pre + 's') + '</h2><p class="sub">Watch a short ad and choose a reward.</p><div class="choices">' +
       opts.map((o) => '<button class="choice' + (o[0] === pick ? ' on' : '') + '" data-k="' + o[0] + '">' + ic(o[0]) + '<b>+' + o[1] + '</b><span>' + o[2] + '</span></button>').join('') +
-      '</div><button class="btn primary big" id="bWatch">' + ic('ad') + '<span>Watch ad</span></button><button class="btn flat" data-x="close">No thanks</button></div>');
+      '</div><button class="btn primary big" id="bWatch">' + ic('ad-white') + '<span>Watch ad</span></button><button class="btn flat" data-x="close">No thanks</button></div>');
     const paint = () => {
       m.querySelectorAll('.choice').forEach((c) => c.classList.toggle('on', c.dataset.k === pick));
       const o = opts.find((x) => x[0] === pick);
