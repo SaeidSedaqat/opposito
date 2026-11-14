@@ -18,13 +18,20 @@
     scene: [OP.game.Scene],
   });
 
-  let resizeT = null;
+  // Relayout on the very next frame of a resize (no waiting), plus one settle pass for mobile
+  // browsers whose bars finish moving a moment after the event.
+  let resizeF = 0, resizeT = null;
   function doResize() {
+    resizeF = 0;
+    if (window.OP_fit) window.OP_fit();
     const s = size();
     try { game.scale.resize(Math.round(s.w * DPR), Math.round(s.h * DPR)); } catch (e) { /* ignore */ }
     OP.game.layout(s.w, s.h);
   }
-  function onResizeSoon() { clearTimeout(resizeT); resizeT = setTimeout(doResize, 60); }
+  function onResizeSoon() {
+    if (!resizeF) resizeF = requestAnimationFrame(doResize);
+    clearTimeout(resizeT); resizeT = setTimeout(doResize, 150);
+  }
   window.addEventListener('resize', onResizeSoon);
   window.addEventListener('orientationchange', onResizeSoon);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) onResizeSoon(); });

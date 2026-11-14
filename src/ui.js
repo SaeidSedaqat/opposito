@@ -522,7 +522,8 @@
     const panel = m.querySelector('.panel');
     const rays = h('<div class="wrays"></div>');
     m.insertBefore(rays, panel);
-    const place = () => { const r = panel.getBoundingClientRect(); rays.style.top = (r.top + 40) + 'px'; };
+    // The rays are zoomed by --s like the panel, so their top is given in zoomed px.
+    const place = () => { const r = panel.getBoundingClientRect(), s = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--s')) || 1; rays.style.top = (r.top / s + 40) + 'px'; };
     place(); setTimeout(place, 220);
     [[8, 14, 0], [84, 10, 0.5], [16, 52, 1], [78, 48, 1.4]].forEach((p) => {
       panel.appendChild(h('<div class="wspark" style="left:' + p[0] + '%;top:' + p[1] + 'px;animation-delay:' + p[2] + 's"></div>'));

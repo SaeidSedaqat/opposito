@@ -8,11 +8,30 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/art/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/art/icon-192.png">
 <link rel="apple-touch-icon" href="assets/art/icon-192.png">
+<script>
+// One scale for every menu (loading, Home, Shop, popups): each is designed at a fixed size and
+// zoomed by --s so it always fits and grows/shrinks as one piece, live while the window resizes.
+// Wide screens (html.land) get the two-column Home and a landscape reference size.
+(function () {
+  var r = document.documentElement;
+  function fit() {
+    var W = window.innerWidth || 1, H = window.innerHeight || 1, land = W >= H * 1.2;
+    var s = land ? Math.min(W / 900, H / 560) : Math.min(W / 360, H / 620);
+    s = Math.max(0.45, Math.min(1.35, s));
+    r.style.setProperty('--s', s.toFixed(4));
+    r.classList.toggle('land', land);
+  }
+  fit();
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', fit);
+  window.OP_fit = fit;
+})();
+</script>
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.175') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.175') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.176') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.176') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -39,7 +58,7 @@ img{display:block; max-width:100%;}
 #loading{position:fixed; inset:0; z-index:50; background:linear-gradient(135deg,#FFF3EA,#EAF5FD);
   display:flex; align-items:center; justify-content:center; transition:opacity .45s ease;}
 #loading.done{opacity:0; pointer-events:none;}
-.lwrap{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:min(320px,80vw); text-align:center;}
+.lwrap{position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:94%; text-align:center;}
 .lmenu{position:relative;}
 .lmenu > .btn, .lfoot > .btn{visibility:hidden;}
 .ltrack{height:10px; border-radius:6px; background:#fff; box-shadow:inset 0 0 0 1px var(--line); overflow:hidden;}
@@ -103,14 +122,22 @@ img{display:block; max-width:100%;}
 .btn.play .ico{width:32px; height:32px; position:absolute; left:2px; top:50%; transform:translateY(-50%);}
 
 /* ---------- home ---------- */
-.homebody{position:absolute; inset:0; display:flex; flex-direction:column; padding:24px;}
-.homemid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8vh; min-height:0;}
+/* Menus are zoomed by --s (set in <head>). Inside a zoomed box vw/vh get zoomed too, so they are divided by --s or avoided. */
+.screen:not([data-name="game"]), #loading .homebody, .modal .panel, .wrays{zoom:var(--s,1);}
+.homebody{position:absolute; inset:0; display:flex; flex-direction:column; padding:24px 14px;}
+.homemid{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:calc(8vh / var(--s,1)); min-height:0;}
 .logo.big{display:flex; align-items:center; gap:10px;}
-.logo.big .logoart{width:min(330px,88vw); height:auto; pointer-events:none;}
-@media (orientation:landscape){ .logo.big .logoart{width:min(462px,60vw,61vh);} } /* 40% bigger on wide screens, capped so short landscape phones still fit */
-.logo.big .word{font-size:clamp(30px,9vw,44px); font-weight:800; letter-spacing:-.5px;}
-.menu{width:min(340px,86vw); display:flex; flex-direction:column; gap:14px;}
-.footrow{width:min(290px,76vw); margin:0 auto; display:flex; gap:30px; flex:none;}
+.logo.big{max-width:100%;}
+.logo.big .logoart{width:330px; max-width:100%; height:auto; pointer-events:none;}
+.menu{width:min(340px,100%); display:flex; flex-direction:column; gap:14px;}
+.footrow{width:min(290px,85%); margin:0 auto; display:flex; gap:30px; flex:none;}
+/* Wide screens: logo on the left, play buttons and Settings/Shop on the right. */
+html.land .homebody{display:grid; grid-template-columns:auto auto; grid-template-rows:auto auto; place-content:center; align-items:center; column-gap:56px; row-gap:26px;}
+html.land .homemid{display:contents;}
+html.land .logo.big{grid-column:1; grid-row:1 / 3;}
+html.land .logo.big .logoart{width:420px;}
+html.land .menu{grid-column:2; grid-row:1; width:340px;}
+html.land .footrow{grid-column:2; grid-row:2; width:290px;}
 .btn.foot{border-image-source:url(assets/art/ui/btn-sky.webp); min-height:86px; border-width:18px 24px 24px; border-image-width:22px 20px 25px;}
 .btn.foot .ico{width:60px; height:60px; margin:-6px 0;}
 
@@ -192,7 +219,7 @@ img{display:block; max-width:100%;}
 .modal{position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center; opacity:0; pointer-events:none; transition:opacity .2s ease; padding:20px;}
 .modal.on{opacity:1; pointer-events:auto;}
 .scrim{position:absolute; inset:0; background:rgba(20,24,36,.45);}
-.panel{position:relative; width:min(380px,100%); max-height:86vh; overflow:auto; background:#FFF7E8; border-radius:22px; padding:26px 22px 22px;
+.panel{position:relative; width:min(380px,100%); max-height:calc(86vh / var(--s,1)); overflow:auto; background:#FFF7E8; border-radius:22px; padding:26px 22px 22px;
   display:flex; flex-direction:column; gap:12px; box-shadow:0 20px 50px rgba(20,24,36,.3); transform:scale(.94); transition:transform .2s ease;}
 .modal.on .panel{transform:scale(1);}
 .panel h2{margin:0 0 4px; font-size:19px; font-weight:800; text-align:center;}
@@ -318,7 +345,6 @@ img{display:block; max-width:100%;}
 
 /* ---------- small screens ---------- */
 @media (max-width:380px){
-  .menu{width:92vw;}
   .cards{gap:8px;}
 }
 </style>
@@ -326,7 +352,7 @@ img{display:block; max-width:100%;}
 <body>
 <div id="loading">
   <!-- Same layout as the Home screen (invisible stand-ins for its buttons) so the logo sits exactly where Home shows it. -->
-  <div class="homebody"><div class="homemid"><div class="logo big"><img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=0.1.175"></div>
+  <div class="homebody"><div class="homemid"><div class="logo big"><img class="logoart" alt="Opposito" draggable="false" src="assets/art/ui/logo.webp?v=0.1.176"></div>
     <div class="menu lmenu"><div class="btn big"></div><div class="btn big"></div><div class="btn big"></div>
       <div class="lwrap">
         <div class="ltrack"><div id="lbar"></div></div>
@@ -341,7 +367,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.175';
+  var V = '0.1.176';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3888],
@@ -349,9 +375,9 @@ img{display:block; max-width:100%;}
     ['src/skins.js', 12518],
     ['src/audio.js', 2791],
     ['src/puzzle.js', 15600],
-    ['src/ui.js', 35628],
+    ['src/ui.js', 35807],
     ['src/game.js', 29991],
-    ['src/main.js', 4641]
+    ['src/main.js', 4939]
   ];
   var SFX = [
     ['click', 669], ['fire', 2341], ['clear', 1296], ['line', 4013],
