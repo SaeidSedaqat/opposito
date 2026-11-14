@@ -76,8 +76,22 @@
     document.documentElement.style.setProperty('--g', g.toFixed(4));
     const v = computeLayout(w / g, h / g);
     OP.ui.placeHud(v);
-    curL = Object.assign({}, v, { W: w, H: h, x: v.x * g, y: v.y * g, size: v.size * g, g });
+    curL = Object.assign({}, v, { W: w, H: h, x: v.x * g, y: v.y * g, size: v.size * g, g, dpr: dprFor(w, h) });
     if (scene) scene.setLayout(curL);
+  }
+
+  // ---------- performance ----------
+  // Canvas resolution: device pixel ratio capped at 2, and the whole canvas capped at ~8.3M pixels
+  // (one 4K screen), so huge or high-DPI monitors don't multiply the GPU fill cost.
+  // main.js sizes the canvas with this same function.
+  function dprFor(w, h) { return Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(8.3e6 / Math.max(1, w * h))); }
+  // Draw on demand: Phaser's loop sleeps whenever nothing on the board is changing or animating,
+  // so an idle board costs no CPU or GPU at all. Anything that changes the picture calls kick().
+  let idleUntil = 0;
+  function kick(ms) {
+    idleUntil = Math.max(idleUntil, performance.now() + (ms || 0) + 250);
+    const loop = scene && scene.game && scene.game.loop;
+    if (loop && !loop.running) loop.wake(true);
   }
 
   // ---------- hint text ----------
@@ -432,14 +446,23 @@
       this.load.image('fx_spark', 'assets/art/fx/spark.webp?v=' + OP.config.VERSION);
     }
     create() {
-      // Capped: a full 3x device pixel ratio triples the fill-rate for no visible gain on a flat-shaded board.
-      this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.dpr = curL ? curL.dpr : dprFor(window.innerWidth, window.innerHeight);
       this.gBg = this.add.graphics().setDepth(0);
       this.gLink = this.add.graphics().setDepth(2);
       this.gFx = this.add.graphics().setDepth(3);
       this.cellC = []; this.n = 0; this.L = null;
+      // Every animation or timer keeps the loop awake for as long as it runs (see kick()).
+      const tAdd = this.tweens.add.bind(this.tweens), dCall = this.time.delayedCall.bind(this.time), eAdd = this.time.addEvent.bind(this.time);
+      this.tweens.add = (c) => { kick(((c.duration || 0) * (c.yoyo ? 2 : 1)) + (c.delay || 0)); return tAdd(c); };
+      this.time.delayedCall = (d, cb, a, s) => { kick(d); return dCall(d, cb, a, s); };
+      this.time.addEvent = (c) => { kick((c.delay || 0) * ((c.repeat || 0) + 1)); return eAdd(c); };
+      this.game.canvas.addEventListener('pointerdown', () => kick(), true);
       this.input.on('pointerdown', (p) => this._onTap(p));
       scene = this; if (curL) scene.setLayout(curL);
+      kick();
+    }
+    update() {
+      if (performance.now() > idleUntil && this.tweens.getTweens().length === 0) this.game.loop.sleep();
     }
     _onTap(p) {
       const L = this.L; if (!L || !pz) return;
@@ -452,7 +475,7 @@
       if (r < 0 || r >= n || c < 0 || c >= n) return;
       tap(r * n + c);
     }
-    setLayout(L) { this.L = L; this.redraw(); }
+    setLayout(L) { this.L = L; if (L.dpr) this.dpr = L.dpr; this.redraw(); kick(); }
     ensureCells(n) {
       if (this.n === n) return;
       this.cellC.forEach((c) => c.destroy());
@@ -537,6 +560,7 @@
       const n = pz.n, dpr = this.dpr, pad = L.size * 0.03, cs = (L.size - 2 * pad) / n;
       const ox = L.x * dpr, oy = L.y * dpr, P = pad * dpr, CS = cs * dpr;
       const rectFor = (i) => { const r = (i / n) | 0, c = i % n; return [ox + P + c * CS + 1, oy + P + r * CS + 1, CS - 2, CS - 2]; };
+      kick(); // pieces or highlights changed: draw a frame
       this.gFx.clear();
       (fx.evidence || []).forEach((i) => {
         const r = rectFor(i);
@@ -638,5 +662,5 @@
     }
   }
 
-  OP.game = { start, pause, booster, onScreen, refreshMarks, clearCache, adPause, layout, Scene: BoardScene, devSolve, devInfo };
+  OP.game = { start, pause, booster, onScreen, refreshMarks, clearCache, adPause, layout, dprFor, Scene: BoardScene, devSolve, devInfo };
 })();

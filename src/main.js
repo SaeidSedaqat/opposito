@@ -2,12 +2,10 @@
 (function () {
   'use strict';
   const OP = window.OP;
-  // Capped at 2x: a 3x device pixel ratio triples fill-rate for no visible gain on a flat UI,
-  // and BoardScene caps its own dpr to match. Must stay identical to the cap in game.js.
-  const DPR = Math.min(window.devicePixelRatio || 1, 2);
-
   function size() { return { w: Math.max(1, window.innerWidth), h: Math.max(1, window.innerHeight) }; }
   const sz = size();
+  // Canvas resolution comes from the same function the board uses (DPR <= 2, ~8.3M px max).
+  const DPR = OP.game.dprFor(sz.w, sz.h);
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
@@ -20,12 +18,13 @@
 
   // Relayout on the very next frame of a resize (no waiting), plus one settle pass for mobile
   // browsers whose bars finish moving a moment after the event.
+  OP.phaser = game; // handy for checking the draw-on-demand loop from the console (OP.phaser.loop.running)
   let resizeF = 0, resizeT = null;
   function doResize() {
     resizeF = 0;
     if (window.OP_fit) window.OP_fit();
-    const s = size();
-    try { game.scale.resize(Math.round(s.w * DPR), Math.round(s.h * DPR)); } catch (e) { /* ignore */ }
+    const s = size(), d = OP.game.dprFor(s.w, s.h);
+    try { game.scale.resize(Math.round(s.w * d), Math.round(s.h * d)); game.scale.setZoom(1 / d); } catch (e) { /* ignore */ }
     OP.game.layout(s.w, s.h);
   }
   function onResizeSoon() {
