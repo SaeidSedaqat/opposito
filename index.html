@@ -11,8 +11,8 @@
 <style>
 @font-face{
   font-family:'Nunito';
-  src:url('assets/fonts/nunito-latin.woff2?v=0.1.120') format('woff2-variations'),
-      url('assets/fonts/nunito-latin.woff2?v=0.1.120') format('woff2');
+  src:url('assets/fonts/nunito-latin.woff2?v=0.1.121') format('woff2-variations'),
+      url('assets/fonts/nunito-latin.woff2?v=0.1.121') format('woff2');
   font-weight:200 1000; font-style:normal; font-display:swap;
 }
 :root{
@@ -114,6 +114,7 @@ img{display:block; max-width:100%;}
 .pill{min-height:50px; padding:0; white-space:nowrap; border:solid transparent; border-width:13px 12px 16px; border-image:url(assets/art/ui/btn-white.webp) 45% 25% 50% 25% fill; filter:drop-shadow(0 4px 6px rgba(35,42,59,.14)); font-weight:900; font-size:16px; color:var(--sub); transition:transform .12s ease,color .15s;}
 .pill:active{transform:scale(.95);}
 .pill.on{border-image-source:url(assets/art/ui/btn-orange.webp); color:#fff; text-shadow:0 2px 0 rgba(150,50,10,.45);}
+.pill:disabled{opacity:.35; filter:grayscale(1); cursor:default; transform:none;}
 .toggles{display:flex; flex-direction:column; gap:10px; margin-top:6px;}
 .toggles.col{margin:10px 0;}
 .tg{display:flex; align-items:center; justify-content:space-between; background:var(--panel); box-shadow:var(--shadow); border-radius:14px; padding:12px 16px; font-weight:700; font-size:14.5px;}
@@ -288,7 +289,7 @@ img{display:block; max-width:100%;}
 <script>
 (function(){
   'use strict';
-  var V = '0.1.120';
+  var V = '0.1.121';
   var FILES = [
     ['lib/phaser-4.2.1.min.js', 1375976],
     ['src/config.js', 3598],
@@ -296,7 +297,7 @@ img{display:block; max-width:100%;}
     ['src/skins.js', 12537],
     ['src/audio.js', 2670],
     ['src/puzzle.js', 15600],
-    ['src/ui.js', 31736],
+    ['src/ui.js', 31897],
     ['src/game.js', 26960],
     ['src/main.js', 3986]
   ];

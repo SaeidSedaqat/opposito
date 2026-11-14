@@ -111,9 +111,11 @@
       '<button class="btn flat" data-x="close">Cancel</button></div>');
     const render = () => {
       const f = S().free;
-      if (f.n === 4) f.diff = 1;
+      // Hardest difficulty each size can reliably produce: 4x4 Easy, 6x6 Medium, 8x8 Hard, 10x10 Expert.
+      const top = { 4: 1, 6: 2, 8: 3, 10: 4 }[f.n] || 4;
+      if (f.diff > top) f.diff = top;
       m.querySelector('#fSize').innerHTML = C.SIZES.map((n) => '<button class="pill' + (f.n === n ? ' on' : '') + '" data-n="' + n + '">' + n + '×' + n + '</button>').join('');
-      m.querySelector('#fDiff').innerHTML = C.DIFFS.map((d, k) => '<button class="pill' + (f.diff === k + 1 ? ' on' : '') + '" data-d="' + (k + 1) + '"' + (f.n === 4 && k > 0 ? ' disabled' : '') + '>' + d + '</button>').join('');
+      m.querySelector('#fDiff').innerHTML = C.DIFFS.map((d, k) => '<button class="pill' + (f.diff === k + 1 ? ' on' : '') + '" data-d="' + (k + 1) + '"' + (k + 1 > top ? ' disabled' : '') + '>' + d + '</button>').join('');
     };
     render();
     m.querySelector('#fSize').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; S().free.n = +b.dataset.n; OP.save.soon(); OP.audio.play('click'); render(); };
